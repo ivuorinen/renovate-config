@@ -59,7 +59,7 @@
       ],
       "commitMessagePrefix": "feat(container)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": " ( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": " ({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -71,7 +71,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "container",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -83,7 +83,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "container",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -95,7 +95,7 @@
       "semanticCommitType": "chore",
       "semanticCommitScope": "container",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentDigestShort}} → {{newDigestShort}} )"
+      "commitMessageExtra": "({{currentDigestShort}} → {{newDigestShort}})"
     },
     {
       "matchDatasources": [
@@ -106,7 +106,7 @@
       ],
       "commitMessagePrefix": "feat(helm)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -118,7 +118,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "helm",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -130,7 +130,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "helm",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -142,7 +142,7 @@
       ],
       "commitMessagePrefix": "feat(ansible)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -155,7 +155,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "ansible",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -168,7 +168,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "ansible",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -179,7 +179,7 @@
       ],
       "commitMessagePrefix": "feat(terraform)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -191,7 +191,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "terraform",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -203,7 +203,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "terraform",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -215,7 +215,7 @@
       ],
       "commitMessagePrefix": "feat(github-release)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -228,7 +228,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "github-release",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchDatasources": [
@@ -241,7 +241,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "github-release",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchManagers": [
@@ -252,7 +252,7 @@
       ],
       "commitMessagePrefix": "feat(github-action)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchManagers": [
@@ -264,7 +264,7 @@
       "semanticCommitType": "feat",
       "semanticCommitScope": "github-action",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "matchManagers": [
@@ -276,7 +276,7 @@
       "semanticCommitType": "fix",
       "semanticCommitScope": "github-action",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "( {{currentVersion}} → {{newVersion}} )"
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
     },
     {
       "description": [
