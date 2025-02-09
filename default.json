@@ -1,6 +1,37 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assigneesFromCodeOwners": true,
+  "commitBody": "Signed-off-by: {{{gitAuthor}}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "commitMessageSuffix": "",
+  "commitMessageTopic": "{{depName}}",
+  "configMigration": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "docker",
+      "description": [
+        "Upgrade Dockerfile ENV and FROM variables base on regex. ",
+        "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
+      ],
+      "fileMatch": [
+        "^Dockerfile$"
+      ],
+      "matchStrings": [
+        "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s",
+        "FROM (?<depName>\\S*):(?<currentValue>\\S*)"
+      ],
+      "matchStringsStrategy": "any"
+    }
+  ],
+  "dependencyDashboardLabels": [
+    "no-stale"
+  ],
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
   "description": "Renovate config for projects ivuorinen manages",
+  "digest": {
+    "enabled": false
+  },
   "extends": [
     "config:recommended",
     ":enableVulnerabilityAlerts",
@@ -9,143 +40,123 @@
     ":preserveSemverRanges",
     ":semanticCommits",
     ":timezone(Europe/Helsinki)",
-    "helpers:pinGitHubActionDigests",
     "docker:enableMajor",
     "group:recommended",
+    "helpers:pinGitHubActionDigests",
     "npm:unpublishSafe",
     "replacements:all",
     "schedule:nonOfficeHours",
     "workarounds:all"
   ],
-  "digest": {
-    "enabled": false
-  },
-  "assigneesFromCodeOwners": true,
-  "configMigration": true,
-  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
   "ignorePaths": [
     "**/*.sops.*",
     "**/.archive/**"
   ],
-  "separateMajorMinor": true,
-  "separateMinorPatch": false,
-  "separateMultipleMajor": true,
-  "suppressNotifications": [
-    "prEditedNotification",
-    "prIgnoreNotification"
-  ],
-  "vulnerabilityAlerts": {
-    "enabled": true
-  },
-  "commitMessageTopic": "{{depName}}",
-  "commitMessageExtra": "to {{newVersion}}",
-  "commitMessageSuffix": "",
-  "commitBody": "Signed-off-by: {{{gitAuthor}}}",
-  "dependencyDashboardLabels": [
-    "no-stale"
-  ],
   "lockFileMaintenance": {
+    "commitMessageAction": "Update",
     "extends": [
       "group:all"
-    ],
-    "commitMessageAction": "Update"
+    ]
   },
+  "onboardingConfigFileName": ".github/renovate.json",
   "packageRules": [
     {
+      "commitMessageExtra": " ({{currentVersion}} → {{newVersion}})",
+      "commitMessagePrefix": "feat(container)!: ",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "docker"
       ],
       "matchUpdateTypes": [
         "major"
-      ],
-      "commitMessagePrefix": "feat(container)!: ",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": " ({{currentVersion}} → {{newVersion}})"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "docker"
       ],
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "container",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "docker"
       ],
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "container",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
+      "commitMessageExtra": "({{currentDigestShort}} → {{newDigestShort}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "docker"
       ],
       "matchUpdateTypes": [
         "digest"
       ],
-      "semanticCommitType": "chore",
       "semanticCommitScope": "container",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentDigestShort}} → {{newDigestShort}})"
+      "semanticCommitType": "chore"
     },
     {
-      "matchDatasources": [
-        "helm"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
       "commitMessagePrefix": "feat(helm)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "helm"
       ],
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "helm",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "helm"
       ],
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "helm",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
-      "matchDatasources": [
-        "galaxy",
-        "galaxy-collection"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
       "commitMessagePrefix": "feat(ansible)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "matchDatasources": [
+        "galaxy",
+        "galaxy-collection"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "galaxy",
         "galaxy-collection"
@@ -153,12 +164,12 @@
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "ansible",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "galaxy",
         "galaxy-collection"
@@ -166,59 +177,59 @@
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "ansible",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
-      "matchDatasources": [
-        "terraform-provider"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
       "commitMessagePrefix": "feat(terraform)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "matchDatasources": [
+        "terraform-provider"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "terraform-provider"
       ],
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "terraform",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "terraform-provider"
       ],
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "terraform",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
-      "matchDatasources": [
-        "github-releases",
-        "github-tags"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
       "commitMessagePrefix": "feat(github-release)!: ",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "matchDatasources": [
+        "github-releases",
+        "github-tags"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "github-releases",
         "github-tags"
@@ -226,12 +237,12 @@
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "github-release",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchDatasources": [
         "github-releases",
         "github-tags"
@@ -239,187 +250,197 @@
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "github-release",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessagePrefix": "feat(github-action)!: ",
+      "commitMessageTopic": "{{depName}}",
       "matchManagers": [
         "github-actions"
       ],
       "matchUpdateTypes": [
         "major"
-      ],
-      "commitMessagePrefix": "feat(github-action)!: ",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      ]
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchManagers": [
         "github-actions"
       ],
       "matchUpdateTypes": [
         "minor"
       ],
-      "semanticCommitType": "feat",
       "semanticCommitScope": "github-action",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "feat"
     },
     {
+      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
+      "commitMessageTopic": "{{depName}}",
       "matchManagers": [
         "github-actions"
       ],
       "matchUpdateTypes": [
         "patch"
       ],
-      "semanticCommitType": "fix",
       "semanticCommitScope": "github-action",
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "({{currentVersion}} → {{newVersion}})"
+      "semanticCommitType": "fix"
     },
     {
+      "automerge": true,
+      "automergeType": "branch",
       "description": [
         "Auto-merge container digests updates for trusted containers"
       ],
       "matchDatasources": [
         "docker"
       ],
-      "automerge": true,
-      "automergeType": "branch",
       "matchUpdateTypes": [
         "digest"
-      ],
-      "matchPackagePatterns": [
-        "ghcr.io/bjw-s",
-        "ghcr.io/onedr0p"
       ]
     },
     {
+      "automerge": true,
+      "automergeType": "branch",
       "description": [
         "Auto-merge GitHub Actions for minor and patch"
-      ],
-      "matchManagers": [
-        "github-actions"
       ],
       "matchDatasources": [
         "github-tags"
       ],
-      "automerge": true,
-      "automergeType": "branch",
+      "matchManagers": [
+        "github-actions"
+      ],
       "matchUpdateTypes": [
         "minor",
         "patch"
       ]
     },
     {
+      "commitMessageTopic": "chart {{depName}}",
       "matchDatasources": [
         "helm"
-      ],
-      "commitMessageTopic": "chart {{depName}}"
+      ]
     },
     {
+      "commitMessageTopic": "image {{depName}}",
       "matchDatasources": [
         "docker"
-      ],
-      "commitMessageTopic": "image {{depName}}"
+      ]
     },
     {
-      "matchUpdateTypes": [
-        "major"
-      ],
       "labels": [
         "type/major"
+      ],
+      "matchUpdateTypes": [
+        "major"
       ]
     },
     {
-      "matchUpdateTypes": [
-        "minor"
-      ],
       "labels": [
         "type/minor"
+      ],
+      "matchUpdateTypes": [
+        "minor"
       ]
     },
     {
-      "matchUpdateTypes": [
-        "patch"
-      ],
       "labels": [
         "type/patch"
+      ],
+      "matchUpdateTypes": [
+        "patch"
       ]
     },
     {
-      "matchUpdateTypes": [
-        "digest"
-      ],
       "labels": [
         "type/digest"
+      ],
+      "matchUpdateTypes": [
+        "digest"
       ]
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
       "addLabels": [
         "renovate/container"
+      ],
+      "matchDatasources": [
+        "docker"
       ]
     },
     {
-      "matchDatasources": [
-        "helm"
-      ],
       "addLabels": [
         "renovate/helm"
+      ],
+      "matchDatasources": [
+        "helm"
       ]
     },
     {
+      "addLabels": [
+        "renovate/ansible"
+      ],
       "matchDatasources": [
         "galaxy",
         "galaxy-collection"
-      ],
-      "addLabels": [
-        "renovate/ansible"
       ]
     },
     {
-      "matchDatasources": [
-        "terraform-provider"
-      ],
       "addLabels": [
         "renovate/terraform"
+      ],
+      "matchDatasources": [
+        "terraform-provider"
       ]
     },
     {
+      "addLabels": [
+        "renovate/github-release"
+      ],
       "matchDatasources": [
         "github-releases",
         "github-tags"
-      ],
-      "addLabels": [
-        "renovate/github-release"
       ]
     },
     {
-      "matchManagers": [
-        "github-actions"
-      ],
       "addLabels": [
         "renovate/github-action"
+      ],
+      "matchManagers": [
+        "github-actions"
       ]
     },
     {
-      "matchDatasources": [
-        "pypi"
-      ],
       "addLabels": [
         "renovate/pip"
+      ],
+      "matchDatasources": [
+        "pypi"
       ]
     },
     {
-      "matchPackagePatterns": [
-        "eslint"
+      "groupName": "devDependencies (non-major)",
+      "matchDepTypes": [
+        "devDependencies"
       ],
-      "groupName": "eslint"
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ]
+    },
+    {
+      "groupName": "eslint",
+      "matchPackageNames": [
+        "/eslint/"
+      ]
     }
-  ]
+  ],
+  "separateMajorMinor": true,
+  "separateMinorPatch": false,
+  "separateMultipleMajor": true,
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
 }
