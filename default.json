@@ -9,6 +9,7 @@
     ":preserveSemverRanges",
     ":semanticCommits",
     ":timezone(Europe/Helsinki)",
+    "helpers:pinGitHubActionDigests",
     "docker:enableMajor",
     "group:recommended",
     "npm:unpublishSafe",
