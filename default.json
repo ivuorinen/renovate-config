@@ -2,6 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assigneesFromCodeOwners": true,
   "commitBody": "Signed-off-by: {{{gitAuthor}}}",
+  "commitMessageAction": "update",
   "commitMessageExtra": "to {{newVersion}}",
   "commitMessageSuffix": "",
   "commitMessageTopic": "{{depName}}",
@@ -14,8 +15,8 @@
         "Upgrade Dockerfile ENV and FROM variables base on regex. ",
         "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
       ],
-      "fileMatch": [
-        "^Dockerfile$"
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
       ],
       "matchStrings": [
         "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s",
@@ -53,7 +54,6 @@
     "**/.archive/**"
   ],
   "lockFileMaintenance": {
-    "commitMessageAction": "Update",
     "extends": [
       "group:all"
     ]
@@ -274,7 +274,7 @@
         "minor"
       ],
       "semanticCommitScope": "github-action",
-      "semanticCommitType": "feat"
+      "semanticCommitType": "chore"
     },
     {
       "commitMessageExtra": "({{currentVersion}} → {{newVersion}})",
@@ -286,7 +286,7 @@
         "patch"
       ],
       "semanticCommitScope": "github-action",
-      "semanticCommitType": "fix"
+      "semanticCommitType": "chore"
     },
     {
       "automerge": true,
@@ -437,6 +437,14 @@
       ]
     }
   ],
+  "postUpdateOptions": [
+    "gomodUpdateImportPaths",
+    "npmDedupe",
+    "composerWithAll"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
   "separateMajorMinor": true,
   "separateMinorPatch": false,
   "separateMultipleMajor": true,

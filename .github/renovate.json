@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assignees": [
+    "ivuorinen"
+  ],
+  "automergeType": "pr",
+  "extends": [
+    "github>ivuorinen/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "automerge": true,
+      "matchPackageNames": [
+        "renovate"
+      ],
+      "separateMinorPatch": false
+    }
+  ],
+  "prCreation": "immediate"
+}
