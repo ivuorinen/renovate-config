@@ -1,13 +1,10 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "$schema": "https://docs.renovatebot.com/renovate-global-schema.json",
   "assigneesFromCodeOwners": true,
   "automergeStrategy": "squash",
   "commitBody": "Signed-off-by: {{{gitAuthor}}}",
   "commitMessageAction": "update",
   "commitMessageExtra": " ({{currentVersion}} → {{newVersion}})",
-  "commitMessageSuffix": "",
-  "commitMessageTopic": "{{depName}}",
-  "configMigration": true,
   "customManagers": [
     {
       "customType": "regex",
@@ -24,6 +21,21 @@
         "FROM (?<depName>\\S*):(?<currentValue>\\S*)"
       ],
       "matchStringsStrategy": "any"
+    },
+    {
+      "customType": "regex",
+      "description": [
+        "Track tool versions in Makefiles via '# renovate: datasource=X depName=Y' comments. ",
+        "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
+      ],
+      "managerFilePatterns": [
+        "^Makefile$",
+        ".*\\.mk$"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n[A-Z_]+\\s*:?=\\s*(?<currentValue>v?\\d+\\.\\d+\\.\\d+\\S*)"
+      ],
+      "versioningTemplate": "semver"
     }
   ],
   "dependencyDashboardLabels": [
@@ -39,17 +51,13 @@
     "config:recommended",
     ":enableVulnerabilityAlerts",
     ":labels(dependencies)",
-    ":maintainLockFilesWeekly",
     ":preserveSemverRanges",
     ":semanticCommits",
     ":timezone(Europe/Helsinki)",
     "docker:enableMajor",
-    "group:recommended",
     "helpers:pinGitHubActionDigests",
-    "npm:unpublishSafe",
-    "replacements:all",
-    "schedule:nonOfficeHours",
-    "workarounds:all"
+    "security:minimumReleaseAgeNpm",
+    "schedule:nonOfficeHours"
   ],
   "git-submodules": {
     "enabled": true,
@@ -63,18 +71,13 @@
     "**/.archive/**",
     "**/testdata/**"
   ],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "extends": [
-      "group:all"
-    ]
-  },
   "onboardingConfigFileName": ".github/renovate.json",
-  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "commitMessagePrefix": "chore(deps)!: ",
-      "commitMessageTopic": "{{depName}}",
+      "labels": [
+        "type/major"
+      ],
       "matchUpdateTypes": [
         "major"
       ]
@@ -98,14 +101,6 @@
       "commitMessageTopic": "image {{depName}}",
       "matchDatasources": [
         "docker"
-      ]
-    },
-    {
-      "labels": [
-        "type/major"
-      ],
-      "matchUpdateTypes": [
-        "major"
       ]
     },
     {
@@ -180,7 +175,8 @@
       ],
       "matchManagers": [
         "github-actions"
-      ]
+      ],
+      "semanticCommitScope": "actions"
     },
     {
       "addLabels": [
@@ -201,9 +197,25 @@
       ]
     },
     {
+      "groupName": "development tools",
+      "matchFileNames": [
+        "Makefile",
+        "**/*.mk"
+      ],
+      "matchManagers": [
+        "custom.regex"
+      ]
+    },
+    {
       "groupName": "eslint",
       "matchPackageNames": [
         "/eslint/"
+      ]
+    },
+    {
+      "groupName": "illuminate",
+      "matchPackageNames": [
+        "/illuminate/"
       ]
     },
     {
@@ -212,12 +224,41 @@
         "/phpstan/",
         "/larastan/"
       ]
+    },
+    {
+      "groupName": "semantic-release",
+      "matchPackageNames": [
+        "/semantic-release/"
+      ]
+    },
+    {
+      "groupName": "stylelint",
+      "matchPackageNames": [
+        "/stylelint/"
+      ]
+    },
+    {
+      "groupName": "tailwind",
+      "matchPackageNames": [
+        "/tailwind/"
+      ]
+    },
+    {
+      "groupName": "vite",
+      "matchPackageNames": [
+        "/vite/"
+      ]
+    },
+    {
+      "groupName": "vue",
+      "matchPackageNames": [
+        "/vue/"
+      ]
     }
   ],
   "postUpdateOptions": [
     "bundlerConservative",
     "composerWithAll",
-    "dotnetWorkloadRestore",
     "gomodUpdateImportPaths",
     "npmDedupe",
     "pnpmDedupe",
@@ -227,7 +268,6 @@
   "pre-commit": {
     "enabled": true
   },
-  "pruneStaleBranches": true,
   "renovate-config-presets": {
     "managerFilePatterns": [
       "renovate.json",
@@ -243,13 +283,5 @@
     ]
   },
   "reviewersFromCodeOwners": true,
-  "semanticCommitScope": "deps",
-  "semanticCommitType": "chore",
-  "semanticCommits": "enabled",
-  "separateMajorMinor": true,
-  "separateMinorPatch": false,
-  "separateMultipleMajor": true,
-  "vulnerabilityAlerts": {
-    "enabled": true
-  }
+  "separateMultipleMajor": true
 }

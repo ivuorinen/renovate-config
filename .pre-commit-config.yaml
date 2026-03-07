@@ -16,8 +16,18 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.58.0
+    rev: 43.59.2
     hooks:
       - id: renovate-config-validator
         files: default.json
         args: [--strict]
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.0
+    hooks:
+      - id: check-jsonschema
+        name: check-renovate-preset
+        files: default.json
+        args:
+          - --schemafile
+          - https://docs.renovatebot.com/renovate-global-schema.json
