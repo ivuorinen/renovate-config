@@ -197,6 +197,17 @@
       ]
     },
     {
+      "groupName": "@ivuorinen packages",
+      "matchPackageNames": [
+        "@ivuorinen/**"
+      ],
+      "minimumReleaseAge": "0 seconds",
+      "prPriority": 10,
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
       "groupName": "development tools",
       "matchFileNames": [
         "Makefile",
