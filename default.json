@@ -72,6 +72,7 @@
     "**/testdata/**"
   ],
   "onboardingConfigFileName": ".github/renovate.json",
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "commitMessagePrefix": "chore(deps)!: ",
