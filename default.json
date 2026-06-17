@@ -198,11 +198,31 @@
       ]
     },
     {
+      "automergeType": "pr",
       "groupName": "@ivuorinen packages",
       "matchPackageNames": [
         "@ivuorinen/**"
       ],
       "minimumReleaseAge": "0 seconds",
+      "prCreation": "immediate",
+      "prPriority": 10,
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "groupName": "@ivuorinen actions",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "ivuorinen/actions",
+        "ivuorinen/actions/**"
+      ],
+      "minimumReleaseAge": "0 seconds",
+      "prCreation": "immediate",
       "prPriority": 10,
       "schedule": [
         "at any time"

@@ -140,7 +140,8 @@ Related packages are grouped into single PRs:
 | tailwind | Package names matching `/tailwind/` |
 | vite | Package names matching `/vite/` |
 | vue | Package names matching `/vue/` |
-| @ivuorinen packages | Package names matching `@ivuorinen/**`; no schedule gate, no release-age hold, `prPriority: 10` |
+| @ivuorinen packages | Package names matching `@ivuorinen/**`; `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (minor/patch), `prPriority: 10` |
+| @ivuorinen actions | `ivuorinen/actions` and `ivuorinen/actions/**` (github-actions manager); `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (all update types), `prPriority: 10` |
 
 ## Post-update options
 
