@@ -44,7 +44,7 @@ This preset inherits from the following built-in Renovate presets:
 | `automergeStrategy` | `squash` | Squash-merge automerged PRs |
 | `commitBody` | `Signed-off-by: {{{gitAuthor}}}` | DCO sign-off in commit body |
 | `commitMessageAction` | `update` | Use "update" as the commit action verb |
-| `commitMessageExtra` | `({{currentVersion}} -> {{newVersion}})` | Show version range in commits |
+| `commitMessageExtra` | `({{currentVersion}} → {{newVersion}})` | Show version range in commits |
 | `dependencyDashboardLabels` | `["no-stale"]` | Prevent stale-bot from closing the dashboard |
 | `dependencyDashboardOSVVulnerabilitySummary` | `unresolved` | Show unresolved OSV vulnerabilities |
 | `dependencyDashboardTitle` | `Renovate Dashboard` | Custom dashboard issue title |
