@@ -280,7 +280,7 @@
   "pre-commit": {
     "enabled": true
   },
-  "renovate-config-presets": {
+  "renovate-config": {
     "managerFilePatterns": [
       "renovate.json",
       "renovate.json5",
