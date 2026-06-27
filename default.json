@@ -198,12 +198,14 @@
       ]
     },
     {
+      "automerge": true,
       "automergeType": "pr",
       "groupName": "@ivuorinen packages",
+      "internalChecksFilter": "flexible",
       "matchPackageNames": [
         "@ivuorinen/**"
       ],
-      "minimumReleaseAge": "0 seconds",
+      "minimumReleaseAge": null,
       "prCreation": "immediate",
       "prPriority": 10,
       "schedule": [
@@ -221,11 +223,29 @@
         "ivuorinen/actions",
         "ivuorinen/actions/**"
       ],
-      "minimumReleaseAge": "0 seconds",
+      "minimumReleaseAge": null,
       "prCreation": "immediate",
       "prPriority": 10,
       "schedule": [
         "at any time"
+      ]
+    },
+    {
+      "description": [
+        "Re-enable digest updates for ALL GitHub Actions. ",
+        "helpers:pinGitHubActionDigests pins every action to a SHA, but the global ",
+        "digest.enabled:false would otherwise freeze those pinned SHAs forever when ",
+        "a floating tag (e.g. @v1) moves to a new commit. This keeps digests disabled ",
+        "for Docker and everything else, while letting all actions stay current. ",
+        "ivuorinen/actions digests additionally inherit the fast-track ",
+        "automerge/priority/schedule from the @ivuorinen actions group rule above."
+      ],
+      "enabled": true,
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "digest"
       ]
     },
     {
