@@ -24,6 +24,7 @@ repos:
       - id: renovate-config-validator
         name: renovate-config-validator (repo config)
         files: .github/renovate.json
+        args: [--strict]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.37.3
@@ -33,4 +34,4 @@ repos:
         files: default.json
         args:
           - --schemafile
-          - https://docs.renovatebot.com/renovate-global-schema.json
+          - https://docs.renovatebot.com/renovate-schema.json
