@@ -27,7 +27,7 @@ This preset inherits from the following built-in Renovate presets:
 |--------|-------------|
 | `config:recommended` | Renovate's recommended base configuration |
 | `:enableVulnerabilityAlerts` | Create PRs for known security vulnerabilities |
-| `:labels(dependencies)` | Add `dependencies` label to all PRs |
+| `:label(dependencies)` | Add `dependencies` label to all PRs |
 | `:preserveSemverRanges` | Keep existing semver range syntax when updating |
 | `:semanticCommits` | Use conventional commit messages (`chore(deps):`) |
 | `:timezone(Europe/Helsinki)` | Schedule evaluation in Europe/Helsinki timezone |
@@ -44,11 +44,10 @@ This preset inherits from the following built-in Renovate presets:
 | `automergeStrategy` | `squash` | Squash-merge automerged PRs |
 | `commitBody` | `Signed-off-by: {{{gitAuthor}}}` | DCO sign-off in commit body |
 | `commitMessageAction` | `update` | Use "update" as the commit action verb |
-| `commitMessageExtra` | `({{currentVersion}} → {{newVersion}})` | Show version range in commits |
+| `commitMessageExtra` | `({{currentVersion}} → {{newVersion}})` | Show version range in commits; renders short SHAs (`currentDigestShort → newDigestShort`) for digest updates instead of an empty range |
 | `dependencyDashboardLabels` | `["no-stale"]` | Prevent stale-bot from closing the dashboard |
 | `dependencyDashboardOSVVulnerabilitySummary` | `unresolved` | Show unresolved OSV vulnerabilities |
-| `dependencyDashboardTitle` | `Renovate Dashboard` | Custom dashboard issue title |
-| `onboardingConfigFileName` | `.github/renovate.json` | Default onboarding config path |
+| `dependencyDashboardTitle` | `Renovate Dashboard 🤖` | Custom dashboard issue title |
 | `prHourlyLimit` | `5` | Max 5 PRs created per hour |
 | `reviewersFromCodeOwners` | `true` | Request reviews from CODEOWNERS |
 | `separateMultipleMajor` | `true` | Create separate PRs for each major version bump |
@@ -73,7 +72,7 @@ FROM node:20-alpine
 Regex (applied with `matchStringsStrategy: "any"`):
 
 ```
-ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\&versioning=(?<versioning>.*))?\s
+ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\&versioning=(?<versioning>.*?))?\s
 FROM (?<depName>\S*):(?<currentValue>\S*)
 ```
 
@@ -140,8 +139,9 @@ Related packages are grouped into single PRs:
 | tailwind | Package names matching `/tailwind/` |
 | vite | Package names matching `/vite/` |
 | vue | Package names matching `/vue/` |
-| @ivuorinen packages | Package names matching `@ivuorinen/**`; `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (minor/patch), `prPriority: 10` |
+| @ivuorinen packages | Package names matching `@ivuorinen/**`; `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (all update types), `prPriority: 10` |
 | @ivuorinen actions | `ivuorinen/actions` and `ivuorinen/actions/**` (github-actions manager); `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (all update types), `prPriority: 10` |
+| GitHub Actions (digest) | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["digest"]`; re-enables digest updates for **all** GitHub Actions, overriding the global `digest.enabled: false` (needed because `helpers:pinGitHubActionDigests` pins every action to a SHA). Docker and other digests stay disabled |
 
 ## Post-update options
 
@@ -160,10 +160,10 @@ Lock file maintenance after dependency updates:
 
 | Setting | Value | Description |
 |---------|-------|-------------|
-| `digest.enabled` | `false` | Digest-only updates disabled |
+| `digest.enabled` | `false` | Digest-only updates disabled globally (re-enabled for all GitHub Actions via a package rule) |
 | `git-submodules.enabled` | `true` | Track git submodule updates |
 | `pre-commit.enabled` | `true` | Update pre-commit hook versions |
-| `ignorePaths` | `**/*.sops.*`, `**/.archive/**`, `**/testdata/**` | Skip encrypted, archived, and test fixture files |
+| `ignorePaths` | `config:recommended` defaults (`node_modules`, `vendor`, `test(s)`, `examples`, fixtures) plus `**/*.sops.*`, `**/.archive/**`, `**/testdata/**` | Skip vendored, encrypted, archived, and test fixture files. The standard defaults are re-listed because `ignorePaths` is non-mergeable — a custom value replaces them |
 
 ## Validation
 
@@ -177,7 +177,7 @@ This executes:
 
 - **`pretty-format-json`** -- ensures consistent JSON formatting
 - **`renovate-config-validator --strict`** -- Renovate's own config validation
-- **`check-renovate`** -- JSON Schema validation against `renovate-global-schema.json`
+- **`check-renovate`** -- JSON Schema validation against `renovate-schema.json`
 - Standard checks (trailing whitespace, end-of-file fixer, etc.)
 
 ## License
