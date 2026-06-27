@@ -11,7 +11,9 @@
     {
       "automerge": true,
       "matchPackageNames": [
-        "renovate"
+        "renovate",
+        "renovate/renovate",
+        "renovatebot/**"
       ],
       "separateMinorPatch": false
     }
