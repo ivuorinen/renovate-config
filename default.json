@@ -1,10 +1,10 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-global-schema.json",
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assigneesFromCodeOwners": true,
   "automergeStrategy": "squash",
   "commitBody": "Signed-off-by: {{{gitAuthor}}}",
   "commitMessageAction": "update",
-  "commitMessageExtra": " ({{currentVersion}} → {{newVersion}})",
+  "commitMessageExtra": " ({{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if (equals updateType \"digest\")}}{{{currentDigestShort}}} → {{{newDigestShort}}}{{else}}{{{currentVersion}}} → {{{newVersion}}}{{/if}}{{/if}})",
   "customManagers": [
     {
       "customType": "regex",
@@ -14,7 +14,7 @@
         "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
       ],
       "managerFilePatterns": [
-        "/^Dockerfile$/"
+        "/(^|/)Dockerfile$/"
       ],
       "matchStrings": [
         "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s",
@@ -29,8 +29,8 @@
         "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
       ],
       "managerFilePatterns": [
-        "^Makefile$",
-        ".*\\.mk$"
+        "/(^|/)Makefile$/",
+        "/\\.mk$/"
       ],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n[A-Z_]+\\s*:?=\\s*(?<currentValue>v?\\d+\\.\\d+\\.\\d+\\S*)"
@@ -50,7 +50,7 @@
   "extends": [
     "config:recommended",
     ":enableVulnerabilityAlerts",
-    ":labels(dependencies)",
+    ":label(dependencies)",
     ":preserveSemverRanges",
     ":semanticCommits",
     ":timezone(Europe/Helsinki)",
@@ -60,25 +60,28 @@
     "schedule:nonOfficeHours"
   ],
   "git-submodules": {
-    "enabled": true,
-    "managerFilePatterns": [
-      "/(^|/)\\.gitmodules$/"
-    ],
-    "versioning": "git"
+    "enabled": true
   },
   "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
     "**/*.sops.*",
     "**/.archive/**",
     "**/testdata/**"
   ],
-  "onboardingConfigFileName": ".github/renovate.json",
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "commitMessagePrefix": "chore(deps)!: ",
-      "labels": [
+      "addLabels": [
         "type/major"
       ],
+      "commitMessagePrefix": "chore(deps)!: ",
       "matchUpdateTypes": [
         "major"
       ]
@@ -105,7 +108,7 @@
       ]
     },
     {
-      "labels": [
+      "addLabels": [
         "type/minor"
       ],
       "matchUpdateTypes": [
@@ -113,7 +116,7 @@
       ]
     },
     {
-      "labels": [
+      "addLabels": [
         "type/patch"
       ],
       "matchUpdateTypes": [
@@ -121,7 +124,7 @@
       ]
     },
     {
-      "labels": [
+      "addLabels": [
         "type/digest"
       ],
       "matchUpdateTypes": [
@@ -319,20 +322,6 @@
   "prHourlyLimit": 5,
   "pre-commit": {
     "enabled": true
-  },
-  "renovate-config": {
-    "managerFilePatterns": [
-      "renovate.json",
-      "renovate.json5",
-      ".github/renovate.json",
-      ".github/renovate.json5",
-      ".gitlab/renovate.json",
-      ".gitlab/renovate.json5",
-      ".renovaterc",
-      ".renovaterc.json",
-      ".renovaterc.json5",
-      "default.json"
-    ]
   },
   "reviewersFromCodeOwners": true,
   "separateMultipleMajor": true
