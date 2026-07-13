@@ -56,24 +56,22 @@ This preset inherits from the following built-in Renovate presets:
 
 ### Dockerfile
 
-Extracts versions from `ENV` variables and `FROM` lines in Dockerfiles using
-[regex manager](https://docs.renovatebot.com/modules/manager/regex/).
+Extracts tool versions from `ENV` variables carrying an inline datasource
+comment, using the [regex manager](https://docs.renovatebot.com/modules/manager/regex/).
+Standard `FROM` lines are left to Renovate's built-in `dockerfile` manager
+(enabled by `config:recommended`), so they are not duplicated here.
 
-**Patterns matched:**
+**Pattern matched:**
 
 ```dockerfile
 # ENV with inline datasource comment
 ENV TOOL_VERSION=1.2.3 # github-releases/owner/repo
-
-# Standard FROM line
-FROM node:20-alpine
 ```
 
 Regex (applied with `matchStringsStrategy: "any"`):
 
 ```
 ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\&versioning=(?<versioning>.*?))?\s
-FROM (?<depName>\S*):(?<currentValue>\S*)
 ```
 
 ### Makefile
@@ -93,11 +91,13 @@ GORELEASER_VERSION := v2.14.1
 Regex:
 
 ```
-#\s*renovate:\s*datasource=(?<datasource>\S+)\s+depName=(?<depName>\S+)\n[A-Z_]+\s*:?=\s*(?<currentValue>v?\d+\.\d+\.\d+\S*)
+#\s*renovate:\s*datasource=(?<datasource>\S+)\s+depName=(?<depName>\S+)\n[A-Za-z_][A-Za-z0-9_]*\s*[:+?]?=\s*(?<currentValue>v?\d+\.\d+(\.\d+)?\S*)
 ```
 
 The `datasource` and `depName` are captured from the comment, and
-`currentValue` from the variable assignment. Uses `semver` versioning.
+`currentValue` from the variable assignment on the next line. The assignment
+may use `=`, `:=`, `?=`, or `+=`, and the version may be two- or three-part
+(`1.21` or `1.21.0`, optional leading `v`). Uses `semver` versioning.
 
 ## Package rules
 
@@ -120,7 +120,7 @@ The `datasource` and `depName` are captured from the comment, and
 | `galaxy`, `galaxy-collection` | `renovate/ansible` | - |
 | `terraform-provider` | `renovate/terraform` | - |
 | `github-releases`, `github-tags` | `renovate/github-release` | - |
-| `github-actions` (manager) | `renovate/github-action` | scope: `actions` |
+| `github-actions` (manager) | `renovate/github-action` | scope: `actions` (non-major; major bumps use `chore(deps)!:`) |
 | `pypi` | `renovate/pip` | - |
 
 ### Dependency groups

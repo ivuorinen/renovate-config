@@ -17,8 +17,7 @@
         "/(^|/)Dockerfile$/"
       ],
       "matchStrings": [
-        "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s",
-        "FROM (?<depName>\\S*):(?<currentValue>\\S*)"
+        "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s"
       ],
       "matchStringsStrategy": "any"
     },
@@ -33,7 +32,7 @@
         "/\\.mk$/"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n[A-Z_]+\\s*:?=\\s*(?<currentValue>v?\\d+\\.\\d+\\.\\d+\\S*)"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n[A-Za-z_][A-Za-z0-9_]*\\s*[:+?]?=\\s*(?<currentValue>v?\\d+\\.\\d+(\\.\\d+)?\\S*)"
       ],
       "versioningTemplate": "semver"
     }
@@ -75,6 +74,7 @@
     "**/.archive/**",
     "**/testdata/**"
   ],
+  "minimumReleaseAge": "3 days",
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
