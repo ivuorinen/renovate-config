@@ -17,10 +17,11 @@ README.md                    # Usage instructions
 
 ## Validation
 
-Run the pre-commit hook to validate `default.json`:
+Run the hooks to validate `default.json` with either [`prek`](https://github.com/j178/prek) (a drop-in reimplementation) or `pre-commit` — both read the same `.pre-commit-config.yaml`:
 
 ```sh
-pre-commit run --all-files
+prek run --all-files
+# or: pre-commit run --all-files
 ```
 
 This runs two validators against `default.json`: `renovate-config-validator --strict` (Renovate's own validator) and `check-renovate` (JSON Schema validation via [check-jsonschema](https://github.com/python-jsonschema/check-jsonschema)). The hooks also enforce JSON formatting (`pretty-format-json --autofix --no-ensure-ascii`), trailing whitespace removal, and other checks.
@@ -29,7 +30,7 @@ This runs two validators against `default.json`: `renovate-config-validator --st
 
 - Extends `config:recommended` and several Renovate built-in presets
 - Defines `packageRules` for automerge (minor/patch), labeling by update type and datasource, and grouping (devDependencies, eslint, phpstan)
-- Includes a `customManagers` regex manager for Dockerfile ENV/FROM version extraction
+- Includes `customManagers` regex managers for Dockerfile `ENV` version extraction and Makefile tool versions (`FROM` lines use Renovate's built-in dockerfile manager)
 - Configures semantic commits (`chore(deps):` scope), squash automerge strategy, and non-office-hours schedule (Europe/Helsinki)
 - Sets `postUpdateOptions` for lock file deduplication across bundler, composer, go, npm, pnpm, and yarn
 
