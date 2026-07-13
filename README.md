@@ -167,10 +167,13 @@ Lock file maintenance after dependency updates:
 
 ## Validation
 
-Run the pre-commit hooks to validate `default.json`:
+Run the hooks to validate `default.json` with either
+[`prek`](https://github.com/j178/prek) (a drop-in reimplementation) or
+`pre-commit` — both read the same `.pre-commit-config.yaml`:
 
 ```sh
-pre-commit run --all-files
+prek run --all-files
+# or: pre-commit run --all-files
 ```
 
 This executes:
