@@ -17,7 +17,7 @@
         "/(^|/)Dockerfile$/"
       ],
       "matchStrings": [
-        "ENV [A-Z]+_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s"
+        "ENV [A-Z][A-Z0-9_]*_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>.*?)(\\&versioning=(?<versioning>.*?))?\\s"
       ],
       "matchStringsStrategy": "any"
     },
@@ -32,9 +32,9 @@
         "/\\.mk$/"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n[A-Za-z_][A-Za-z0-9_]*\\s*[:+?]?=\\s*(?<currentValue>v?\\d+\\.\\d+(\\.\\d+)?\\S*)"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:[^\\n]*?[ \\t]versioning=(?<versioning>\\S+))?[^\\n]*\\n[A-Za-z_][A-Za-z0-9_]*\\s*[:+?]?=\\s*(?<currentValue>v?\\d+\\.\\d+(\\.\\d+)?\\S*)"
       ],
-      "versioningTemplate": "semver"
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}"
     }
   ],
   "dependencyDashboardLabels": [
@@ -89,11 +89,32 @@
     {
       "automerge": true,
       "automergeType": "branch",
+      "description": [
+        "Automerge non-breaking version bumps via branch strategy. ",
+        "'digest' is deliberately excluded: digest updates bypass minimumReleaseAge ",
+        "entirely (Renovate pushes them outside filterInternalChecks), so automerging ",
+        "them would silently accept a force-moved third-party action tag — the exact ",
+        "attack helpers:pinGitHubActionDigests exists to prevent. Third-party digest ",
+        "updates therefore raise a reviewable PR; only ivuorinen/actions digests ",
+        "automerge, via the trusted-source rule at the end of this array."
+      ],
       "matchUpdateTypes": [
         "minor",
-        "patch",
-        "digest"
+        "patch"
       ]
+    },
+    {
+      "description": [
+        "Exempt git submodules from the global minimumReleaseAge hold. The git-refs ",
+        "datasource returns no releaseTimestamp, and minimumReleaseAgeBehaviour defaults ",
+        "to 'timestamp-required', so an unexempted submodule update is marked pending ",
+        "forever and no branch is ever created. Every other datasource keeps the ",
+        "fail-closed 3-day hold."
+      ],
+      "matchManagers": [
+        "git-submodules"
+      ],
+      "minimumReleaseAge": null
     },
     {
       "commitMessageTopic": "chart {{depName}}",
@@ -201,47 +222,15 @@
       ]
     },
     {
-      "automerge": true,
-      "automergeType": "pr",
-      "groupName": "@ivuorinen packages",
-      "internalChecksFilter": "flexible",
-      "matchPackageNames": [
-        "@ivuorinen/**"
-      ],
-      "minimumReleaseAge": null,
-      "prCreation": "immediate",
-      "prPriority": 10,
-      "schedule": [
-        "at any time"
-      ]
-    },
-    {
-      "automerge": true,
-      "automergeType": "pr",
-      "groupName": "@ivuorinen actions",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchPackageNames": [
-        "ivuorinen/actions",
-        "ivuorinen/actions/**"
-      ],
-      "minimumReleaseAge": null,
-      "prCreation": "immediate",
-      "prPriority": 10,
-      "schedule": [
-        "at any time"
-      ]
-    },
-    {
       "description": [
         "Re-enable digest updates for ALL GitHub Actions. ",
         "helpers:pinGitHubActionDigests pins every action to a SHA, but the global ",
         "digest.enabled:false would otherwise freeze those pinned SHAs forever when ",
         "a floating tag (e.g. @v1) moves to a new commit. This keeps digests disabled ",
         "for Docker and everything else, while letting all actions stay current. ",
-        "ivuorinen/actions digests additionally inherit the fast-track ",
-        "automerge/priority/schedule from the @ivuorinen actions group rule above."
+        "Enabling a digest update is not the same as automerging it: third-party ",
+        "action digests raise a reviewable PR, and only ivuorinen/actions digests ",
+        "inherit automerge from the trusted-source rule at the end of this array."
       ],
       "enabled": true,
       "matchManagers": [
@@ -254,7 +243,7 @@
     {
       "groupName": "development tools",
       "matchFileNames": [
-        "Makefile",
+        "**/Makefile",
         "**/*.mk"
       ],
       "matchManagers": [
@@ -308,6 +297,52 @@
       "groupName": "vue",
       "matchPackageNames": [
         "/vue/"
+      ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "description": [
+        "Fast-track first-party packages. This rule and the one below MUST stay last ",
+        "in packageRules: the ecosystem groups above match on unanchored regexes ",
+        "(/eslint/, /stylelint/, /semantic-release/) which also match ",
+        "@ivuorinen/eslint-config, @ivuorinen/stylelint-config, @ivuorinen/stylelint-a11y ",
+        "and @ivuorinen/semantic-release-config. Renovate applies packageRules in array ",
+        "order and later matches win, so placed earlier this groupName was silently ",
+        "overwritten for a third of the scope."
+      ],
+      "groupName": "@ivuorinen packages",
+      "internalChecksFilter": "flexible",
+      "matchPackageNames": [
+        "@ivuorinen/**"
+      ],
+      "minimumReleaseAge": null,
+      "prCreation": "immediate",
+      "prPriority": 10,
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "description": [
+        "Fast-track first-party actions. Also the trusted source whose digest updates ",
+        "are allowed to automerge — third-party action digests deliberately do not."
+      ],
+      "groupName": "@ivuorinen actions",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "ivuorinen/actions",
+        "ivuorinen/actions/**"
+      ],
+      "minimumReleaseAge": null,
+      "prCreation": "immediate",
+      "prPriority": 10,
+      "schedule": [
+        "at any time"
       ]
     }
   ],

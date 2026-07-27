@@ -18,13 +18,18 @@ repos:
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 43.252.1
     hooks:
+      # --no-global is required: renovate-config-validator treats any explicitly
+      # passed filename as a *global* self-hosted config, whose schema is a
+      # superset that silently accepts globalOnly options. Without it, a
+      # globalOnly option in the preset validates clean and is then ignored by
+      # every consumer. Hook output must read "as repo config".
       - id: renovate-config-validator
         files: default.json
-        args: [--strict]
+        args: [--strict, --no-global]
       - id: renovate-config-validator
         name: renovate-config-validator (repo config)
         files: .github/renovate.json
-        args: [--strict]
+        args: [--strict, --no-global]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.37.4
@@ -35,3 +40,12 @@ repos:
         args:
           - --schemafile
           - https://docs.renovatebot.com/renovate-schema.json
+
+  - repo: local
+    hooks:
+      - id: check-managers
+        name: check-custom-managers
+        entry: node test/check-managers.mjs
+        language: system
+        files: ^(default\.json|test/)
+        pass_filenames: false
