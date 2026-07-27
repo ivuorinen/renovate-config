@@ -3,19 +3,51 @@
   "assignees": [
     "ivuorinen"
   ],
-  "automergeType": "pr",
   "extends": [
     "github>ivuorinen/renovate-config"
   ],
   "packageRules": [
     {
-      "automerge": true,
+      "automergeType": "pr",
+      "description": [
+        "Keep this repo's automerges as reviewable PRs. A top-level automergeType is ",
+        "inert here: the preset sets automergeType per updateType in packageRules, ",
+        "which override top-level config, so the override must also be a packageRule."
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "description": [
+        "Keep Renovate's own minor and patch bumps in one branch. Must stay in a rule ",
+        "without matchUpdateTypes — separateMinorPatch is resolved before the update ",
+        "type is known, and Renovate rejects combining the two."
+      ],
       "matchPackageNames": [
         "renovate",
         "renovate/renovate",
         "renovatebot/**"
       ],
       "separateMinorPatch": false
+    },
+    {
+      "automerge": true,
+      "description": [
+        "Self-update Renovate tooling. Restricted to minor/patch: the only match here ",
+        "is renovatebot/pre-commit-hooks, which provides this repo's only validator, ",
+        "and a major bump can rename or drop the hook id. Majors get a review."
+      ],
+      "matchPackageNames": [
+        "renovate",
+        "renovate/renovate",
+        "renovatebot/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
     }
   ],
   "prCreation": "immediate"
