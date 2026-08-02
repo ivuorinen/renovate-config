@@ -16,7 +16,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 44.4.2
+    rev: 44.4.3
     hooks:
       # --no-global is required: renovate-config-validator treats any explicitly
       # passed filename as a *global* self-hosted config, whose schema is a
