@@ -103,9 +103,16 @@ GORELEASER_VERSION := v2.14.1
 LINT_VERSION := v1.61.0
 
 # two-part versions are supported
-# renovate: datasource=github-releases depName=golang/go
+# renovate: datasource=golang-version depName=go
 GO_VERSION := 1.21
 ```
+
+> **Use `golang-version` for the Go toolchain, never `github-releases`.**
+> `golang/go` publishes git tags but no GitHub Releases, so
+> `datasource=github-releases depName=golang/go` resolves zero versions and the pin
+> never moves — with no error and no dashboard entry. `golang-version` reads
+> `go.dev/dl` and supports release timestamps, so it also clears the 3-day
+> `minimumReleaseAge` hold. `test/check-managers.mjs` fails on the wrong pairing.
 
 Regex:
 
@@ -136,6 +143,7 @@ every dependency pinned to a `1.21`-style version.
 
 | Rule | Matches | Effect |
 |------|---------|--------|
+| Go toolchain in `go.mod` | `matchManagers: ["gomod"]`, `matchDepNames: ["go"]`, `matchDepTypes: ["golang"]` | `rangeStrategy: "bump"`, so the `go` directive tracks new Go releases. Renovate does **not** propose these by default — without the rule the line silently never moves. Raises the minimum Go version for importers, so a library with external consumers should override it back off |
 | Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label. The literal prefix overrides the semantic prefix wholesale, so runtime-dependency majors also commit as `chore(deps)!:` rather than `fix(deps)!:` |
 | Actions are never breaking | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["major"]` | `chore(actions):` prefix — restores the scope and drops the `!` that the rule above would apply. A GitHub Actions bump changes CI only, never the consuming package's public API, so it must not make semantic-release cut a major. Must stay **after** the major rule; `test/check-commit-messages.mjs` asserts that ordering |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |

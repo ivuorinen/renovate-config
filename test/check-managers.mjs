@@ -73,7 +73,7 @@ check(
     'github.com/goreleaser/goreleaser/v2',
     'golangci/golangci-lint',
     'kubernetes/kubernetes',
-    'golang/go',
+    'go',
     'node',
   ],
 );
@@ -84,9 +84,26 @@ check(
 );
 check(
   'Makefile manager accepts two-part versions',
-  make.filter((g) => g.depName === 'golang/go').map((g) => g.currentValue),
+  make.filter((g) => g.depName === 'go').map((g) => g.currentValue),
   ['1.21'],
 );
+
+// golang/go has zero GitHub Releases, so `datasource=github-releases depName=golang/go`
+// resolves nothing and the pin never moves — silently, with no error. The fixtures are
+// what consumers copy, so neither may teach that pairing. Asserted against the groups the
+// manager actually extracts, not the file text, so prose about the trap cannot trip it.
+for (const [file, groups] of [
+  ['Dockerfile', docker],
+  ['Makefile', make],
+]) {
+  const bad = groups.filter((g) => g.datasource === 'github-releases' && g.depName === 'golang/go');
+  if (bad.length) {
+    failures.push(`${file} pairs golang/go with github-releases`);
+    console.log(`FAIL ${file} annotates golang/go with github-releases — use golang-version/go`);
+  } else {
+    console.log(`ok   ${file} does not pair golang/go with github-releases`);
+  }
+}
 
 // A two-part currentValue is only usable if the versioning tolerates it.
 // "semver" rejects 1.21 outright, which is what versioningTemplate used to pin.

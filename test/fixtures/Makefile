@@ -13,8 +13,10 @@ LINT_VERSION := v1.61.0
 # renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$
 K8S_VERSION := 1.29.0
 
-# two-part version — rejected by the old versioningTemplate "semver"
-# renovate: datasource=github-releases depName=golang/go
+# two-part version — rejected by the old versioningTemplate "semver".
+# datasource is golang-version, NOT github-releases: golang/go publishes tags but
+# no GitHub Releases, so github-releases resolves zero versions and never updates.
+# renovate: datasource=golang-version depName=go
 GO_VERSION := 1.21
 
 # lowercase name and ?= assignment
