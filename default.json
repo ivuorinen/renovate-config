@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assigneesFromCodeOwners": true,
   "automergeStrategy": "squash",
-  "commitBody": "Signed-off-by: {{{gitAuthor}}}",
   "commitMessageAction": "update",
   "commitMessageExtra": " ({{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if (equals updateType \"digest\")}}{{{currentDigestShort}}} → {{{newDigestShort}}}{{else}}{{{currentVersion}}} → {{{newVersion}}}{{/if}}{{/if}})",
   "customManagers": [
@@ -49,6 +48,7 @@
   "extends": [
     "config:recommended",
     ":enableVulnerabilityAlerts",
+    ":gitSignOff",
     ":label(dependencies)",
     ":preserveSemverRanges",
     ":semanticCommits",
@@ -241,6 +241,25 @@
       ]
     },
     {
+      "commitMessagePrefix": "chore(actions): ",
+      "description": [
+        "Never mark a GitHub Actions major bump as a breaking change. The global major ",
+        "rule sets 'chore(deps)!: ', and the '!' makes semantic-release in the consuming ",
+        "repo cut a major release — but an actions/checkout v4 → v5 bump changes CI only, ",
+        "never the package's public API. This restates the prefix literally rather than ",
+        "resetting it, because a packageRule can only override a value, not unset one; ",
+        "the literal must stay in sync with semanticCommitType + the 'actions' ",
+        "semanticCommitScope set above. Must stay after the major rule: later matching ",
+        "rules win."
+      ],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
+    },
+    {
       "groupName": "development tools",
       "matchFileNames": [
         "**/Makefile",
@@ -300,19 +319,17 @@
       ]
     },
     {
-      "automerge": true,
-      "automergeType": "pr",
       "description": [
-        "Fast-track first-party packages. This rule and the one below MUST stay last ",
+        "Fast-track first-party packages. This rule and the three below MUST stay last ",
         "in packageRules: the ecosystem groups above match on unanchored regexes ",
         "(/eslint/, /stylelint/, /semantic-release/) which also match ",
         "@ivuorinen/eslint-config, @ivuorinen/stylelint-config, @ivuorinen/stylelint-a11y ",
         "and @ivuorinen/semantic-release-config. Renovate applies packageRules in array ",
         "order and later matches win, so placed earlier this groupName was silently ",
-        "overwritten for a third of the scope."
+        "overwritten for a third of the scope. Grouping, priority and the release-age ",
+        "waiver apply to every update type; automerge is granted separately below."
       ],
       "groupName": "@ivuorinen packages",
-      "internalChecksFilter": "flexible",
       "matchPackageNames": [
         "@ivuorinen/**"
       ],
@@ -327,8 +344,26 @@
       "automerge": true,
       "automergeType": "pr",
       "description": [
-        "Fast-track first-party actions. Also the trusted source whose digest updates ",
-        "are allowed to automerge — third-party action digests deliberately do not."
+        "Automerge first-party packages, minor and patch only. Majors are excluded on ",
+        "purpose: this rule waives the 3-day minimumReleaseAge and the non-office-hours ",
+        "schedule, so an automerged major would reach every consuming repo within one ",
+        "Renovate run with no cooldown and no human in the loop — the same reasoning ",
+        "this repo's own .github/renovate.json applies to renovatebot/** ('a major bump ",
+        "can rename or drop the hook id. Majors get a review'). First-party majors still ",
+        "get an immediate, top-priority PR from the rule above; they just need a click."
+      ],
+      "matchPackageNames": [
+        "@ivuorinen/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "description": [
+        "Fast-track first-party actions. Grouping, priority and the release-age waiver ",
+        "apply to every update type; automerge is granted separately below."
       ],
       "groupName": "@ivuorinen actions",
       "matchManagers": [
@@ -343,6 +378,28 @@
       "prPriority": 10,
       "schedule": [
         "at any time"
+      ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "pr",
+      "description": [
+        "Automerge first-party actions. 'digest' is included here and nowhere else: this ",
+        "is the trusted source whose digest updates are allowed to automerge, while ",
+        "third-party action digests deliberately raise a reviewable PR. Majors are ",
+        "excluded for the same reason as first-party packages above."
+      ],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "ivuorinen/actions",
+        "ivuorinen/actions/**"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "minor",
+        "patch"
       ]
     }
   ],

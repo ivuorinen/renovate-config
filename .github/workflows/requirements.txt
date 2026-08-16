@@ -1,0 +1,4 @@
+# Pinned so a CI run is reproducible and so Renovate's pip_requirements manager
+# can see the tool that executes every hook. A bare "pip install pre-commit" in
+# the workflow was the one unpinned input in an otherwise fully pinned job.
+pre-commit==4.6.2

@@ -49,3 +49,13 @@ repos:
         language: system
         files: ^(default\.json|test/)
         pass_filenames: false
+
+      # renovate-config-validator types commitMessagePrefix as a plain string, so
+      # a malformed prefix — or a "!" breaking marker back on github-actions —
+      # validates clean and only fails in consuming repos.
+      - id: check-commit-messages
+        name: check-commit-messages
+        entry: node test/check-commit-messages.mjs
+        language: system
+        files: ^(default\.json|test/)
+        pass_filenames: false

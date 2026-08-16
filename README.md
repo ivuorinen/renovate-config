@@ -27,9 +27,10 @@ This preset inherits from the following built-in Renovate presets:
 |--------|-------------|
 | `config:recommended` | Renovate's recommended base configuration |
 | `:enableVulnerabilityAlerts` | Create PRs for known security vulnerabilities |
+| `:gitSignOff` | Append `Signed-off-by:` as a git trailer (`commitTrailers`) |
 | `:label(dependencies)` | Add `dependencies` label to all PRs |
 | `:preserveSemverRanges` | Keep existing semver range syntax when updating |
-| `:semanticCommits` | Use conventional commit messages (`chore(deps):`) |
+| `:semanticCommits` | Conventional commit messages. `config:recommended` also pulls in `:semanticPrefixFixDepsChoreOthers`, so runtime dependencies commit as `fix(deps):` and everything else as `chore(deps):` |
 | `:timezone(Europe/Helsinki)` | Schedule evaluation in Europe/Helsinki timezone |
 | `docker:enableMajor` | Enable major version updates for Docker |
 | `helpers:pinGitHubActionDigests` | Pin GitHub Actions to full SHA digests |
@@ -42,7 +43,6 @@ This preset inherits from the following built-in Renovate presets:
 |---------|-------|-------------|
 | `assigneesFromCodeOwners` | `true` | Assign PRs to CODEOWNERS |
 | `automergeStrategy` | `squash` | Squash-merge automerged PRs |
-| `commitBody` | `Signed-off-by: {{{gitAuthor}}}` | DCO sign-off in commit body |
 | `commitMessageAction` | `update` | Use "update" as the commit action verb |
 | `commitMessageExtra` | `({{currentVersion}} → {{newVersion}})` | Show version range in commits; renders short SHAs (`currentDigestShort → newDigestShort`) for digest updates instead of an empty range |
 | `dependencyDashboardLabels` | `["no-stale"]` | Prevent stale-bot from closing the dashboard |
@@ -136,7 +136,8 @@ every dependency pinned to a `1.21`-style version.
 
 | Rule | Matches | Effect |
 |------|---------|--------|
-| Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label |
+| Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label. The literal prefix overrides the semantic prefix wholesale, so runtime-dependency majors also commit as `chore(deps)!:` rather than `fix(deps)!:` |
+| Actions are never breaking | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["major"]` | `chore(actions):` prefix — restores the scope and drops the `!` that the rule above would apply. A GitHub Actions bump changes CI only, never the consuming package's public API, so it must not make semantic-release cut a major. Must stay **after** the major rule; `test/check-commit-messages.mjs` asserts that ordering |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |
 | Minor label | `matchUpdateTypes: ["minor"]` | `type/minor` label |
 | Patch label | `matchUpdateTypes: ["patch"]` | `type/patch` label |
@@ -151,7 +152,7 @@ every dependency pinned to a `1.21`-style version.
 | `galaxy`, `galaxy-collection` | `renovate/ansible` | - |
 | `terraform-provider` | `renovate/terraform` | - |
 | `github-releases`, `github-tags` | `renovate/github-release` | - |
-| `github-actions` (manager) | `renovate/github-action` | scope: `actions` (non-major; major bumps use `chore(deps)!:`) |
+| `github-actions` (manager) | `renovate/github-action` | scope: `actions`, for every update type — actions bumps are never marked breaking |
 | `pypi` | `renovate/pip` | - |
 
 ### Dependency groups
@@ -170,11 +171,11 @@ Related packages are grouped into single PRs:
 | tailwind | Package names matching `/tailwind/` |
 | vite | Package names matching `/vite/` |
 | vue | Package names matching `/vue/` |
-| @ivuorinen packages | Package names matching `@ivuorinen/**`; `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (all update types), `prPriority: 10` |
-| @ivuorinen actions | `ivuorinen/actions` and `ivuorinen/actions/**` (github-actions manager); `prCreation: "immediate"`, no schedule gate, no release-age hold, automerged via PR (all update types), `prPriority: 10` |
+| @ivuorinen packages | Package names matching `@ivuorinen/**`; `prCreation: "immediate"`, no schedule gate, no release-age hold, `prPriority: 10`. Automerged via PR for **minor and patch only** — see below |
+| @ivuorinen actions | `ivuorinen/actions` and `ivuorinen/actions/**` (github-actions manager); `prCreation: "immediate"`, no schedule gate, no release-age hold, `prPriority: 10`. Automerged via PR for **minor, patch and digest** — see below |
 | GitHub Actions (digest) | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["digest"]`; re-enables digest updates for **all** GitHub Actions, overriding the global `digest.enabled: false` (needed because `helpers:pinGitHubActionDigests` pins every action to a SHA). Docker and other digests stay disabled |
 
-> **Rule order matters.** The two `@ivuorinen` rules are last in `packageRules`
+> **Rule order matters.** The four `@ivuorinen` rules are last in `packageRules`
 > on purpose. Renovate applies rules in array order and later matches win, and
 > the ecosystem groups above match on unanchored regexes — `/eslint/`,
 > `/stylelint/` and `/semantic-release/` also match `@ivuorinen/eslint-config`,
@@ -193,6 +194,17 @@ which is precisely what `helpers:pinGitHubActionDigests` exists to prevent.
 Third-party action digests therefore raise a reviewable PR. Only
 `ivuorinen/actions` digests automerge, via the trusted-source rule at the end of
 `packageRules`.
+
+### First-party majors are not automerged
+
+Each `@ivuorinen` fast-track is split into a grouping rule (all update types) and
+an automerge rule (minor/patch, plus `digest` for `ivuorinen/actions`). Majors are
+excluded on purpose: these rules waive both the 3-day `minimumReleaseAge` and the
+non-office-hours schedule, so an automerged first-party major would land in every
+consuming repo within one Renovate run with no cooldown and no human in the loop.
+That is the same reasoning this repo's own `.github/renovate.json` applies to
+`renovatebot/**`. First-party majors still get an immediate, top-priority PR —
+they just need a click.
 
 ## Post-update options
 
@@ -239,6 +251,12 @@ This executes:
   they extract. `renovate-config-validator` only checks that a match string
   *compiles*, never that it *matches* anything, so this is the only guard against a
   regex that silently stops extracting. Requires `node` on `PATH`
+- **`check-commit-messages`** -- runs `test/check-commit-messages.mjs`, which asserts
+  every `commitMessagePrefix` in `default.json` is a valid conventional-commit prefix,
+  that no `github-actions`-scoped rule carries a `!` breaking marker, and that the
+  actions override still sits after every unscoped breaking prefix. The validator
+  types `commitMessagePrefix` as a plain string, so none of those defects fail it —
+  they fail commitlint in consuming repos instead. Requires `node` on `PATH`
 - Standard checks (trailing whitespace, end-of-file fixer, etc.)
 
 The same hooks run in CI on every push to `main` and every pull request
