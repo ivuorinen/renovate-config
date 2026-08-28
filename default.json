@@ -7,9 +7,15 @@
   "customManagers": [
     {
       "customType": "regex",
-      "datasourceTemplate": "docker",
       "description": [
-        "Upgrade Dockerfile ENV and FROM variables base on regex. ",
+        "Track tool versions in Dockerfile ENV lines via '# datasource/depName' comments. ",
+        "Carries no datasourceTemplate on purpose: a '<field>Template' wins over the ",
+        "capture group of the same name — createDependency() takes the template branch ",
+        "first and the capture only as its else — so the 'docker' template that used to ",
+        "sit here made the (?<datasource>) capture dead code. Every annotated ENV resolved ",
+        "against the Docker datasource instead of the one its comment named: ",
+        "'# golang-version/go' was looked up as the image 'go' and the pin never moved, ",
+        "silently. FROM lines are left to the built-in dockerfile manager. ",
         "See https://docs.renovatebot.com/configuration-options/#matchstringsstrategy"
       ],
       "managerFilePatterns": [
@@ -47,6 +53,7 @@
   },
   "extends": [
     "config:recommended",
+    "customManagers:githubActionsVersions",
     ":enableVulnerabilityAlerts",
     ":gitSignOff",
     ":label(dependencies)",
@@ -260,10 +267,20 @@
       ]
     },
     {
+      "description": [
+        "Group the annotated tool pins — Makefile variables and workflow '*_VERSION' env ",
+        "vars — into one PR. The workflow paths cover the customManagers:githubActionsVersions ",
+        "preset in 'extends': those deps come from the custom.regex manager, not the ",
+        "github-actions one, so the actions rules above never match them."
+      ],
       "groupName": "development tools",
       "matchFileNames": [
         "**/Makefile",
-        "**/*.mk"
+        "**/*.mk",
+        "**/.github/workflows/*.yml",
+        "**/.github/workflows/*.yaml",
+        "**/action.yml",
+        "**/action.yaml"
       ],
       "matchManagers": [
         "custom.regex"
@@ -406,6 +423,7 @@
   "postUpdateOptions": [
     "bundlerConservative",
     "composerWithAll",
+    "gomodTidy",
     "gomodUpdateImportPaths",
     "npmDedupe",
     "pnpmDedupe",

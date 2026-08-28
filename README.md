@@ -85,6 +85,17 @@ ENV [A-Z][A-Z0-9_]*_VERSION=(?<currentValue>.*) # (?<datasource>.*?)/(?<depName>
 The variable name must start with an uppercase letter and end in `_VERSION`;
 underscores and digits in between are allowed. `ARG` is not matched — only `ENV`.
 
+> **The datasource comes from the comment, and the manager carries no
+> `datasourceTemplate`.** A constant `<field>Template` does not *default* the capture
+> group of the same name, it *replaces* it: Renovate's `createDependency()` compiles the
+> template when one is set and reads the capture only as its `else`. A
+> `datasourceTemplate: "docker"` used to sit here, so every annotated `ENV` resolved
+> against the Docker datasource no matter what its comment said — `# golang-version/go`
+> was looked up as the image `go`, matched nothing, and the pin never moved, with no
+> error and no dashboard entry. `test/check-managers.mjs` now fails if a constant
+> template shadows a capture again. The Makefile `versioningTemplate` below is the
+> legitimate shape: it interpolates its own group and only supplies a fallback.
+
 ### Makefile
 
 Tracks tool versions in Makefiles via `# renovate:` comments using
@@ -136,6 +147,32 @@ Versioning comes from the comment when given, otherwise `semver-coerced`:
 `semver-coerced` rather than `semver` because strict `semver` rejects two-part
 versions outright (`semver.valid("1.21")` is `null`), which would silently drop
 every dependency pinned to a `1.21`-style version.
+
+### GitHub Actions workflows
+
+Tool versions pinned inside a workflow are tracked through the
+`customManagers:githubActionsVersions` preset in `extends` — the regex lives upstream,
+not in this file. Annotate an `env:` entry whose name ends in `_VERSION`:
+
+```yaml
+- name: staticcheck
+  env:
+    # renovate: datasource=github-releases depName=dominikh/go-tools
+    STATICCHECK_VERSION: 2026.2.1
+  run: go run honnef.co/go/tools/cmd/staticcheck@"$STATICCHECK_VERSION" ./...
+```
+
+Files matched: `.github/workflows/*.y[a]ml`, `action.y[a]ml`, and the Gitea/Forgejo and
+`workflow-templates` equivalents. This is what keeps a `go run tool@version` pin — the
+shape a linter that gates CI should have, since `@latest` changes CI behaviour with no
+commit — from freezing at whatever version was typed once.
+
+These deps come from the `custom.regex` manager, not `github-actions`, so the GitHub
+Actions package rules do not apply to them: no `renovate/github-action` label and no
+`chore(actions):` prefix. They join the Makefile pins in the **development tools** group.
+
+> Not covered by `test/check-managers.mjs`: that check reads regexes out of
+> `default.json`, and this one ships inside the preset.
 
 ## Package rules
 
@@ -241,6 +278,7 @@ Lock file maintenance after dependency updates:
 |--------|-------------|
 | `bundlerConservative` | Conservative Bundler updates |
 | `composerWithAll` | Run `composer update` with `--with-all-dependencies` |
+| `gomodTidy` | Run `go mod tidy` after updates, so `go.mod` and `go.sum` do not keep entries the update dropped |
 | `gomodUpdateImportPaths` | Update Go import paths on major updates |
 | `npmDedupe` | Run `npm dedupe` after updates |
 | `pnpmDedupe` | Run `pnpm dedupe` after updates |

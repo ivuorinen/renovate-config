@@ -112,6 +112,44 @@ if (config.customManagers.some((m) => m.versioningTemplate === 'semver')) {
   console.log('FAIL versioningTemplate must not pin strict "semver" — it rejects two-part versions');
 }
 
+// A `<field>Template` beats the capture group of the same name: Renovate's
+// createDependency() compiles the template when one is set and falls back to the
+// capture only as its `else`. So a *constant* template next to a capture of the same
+// name does not mean "default" — it means the capture is dead. `datasourceTemplate:
+// "docker"` sat on the Dockerfile manager whose comments name their own datasource, and
+// every annotated ENV resolved against the Docker datasource: `# golang-version/go` was
+// looked up as the image `go`, resolved nothing, and never moved. A template that
+// interpolates its own group (the Makefile `versioningTemplate`) is the legitimate
+// shape — it supplies a default and is exempt.
+const templatedFields = [
+  'datasource',
+  'depName',
+  'packageName',
+  'currentValue',
+  'versioning',
+  'extractVersion',
+  'registryUrl',
+];
+const shadowed = failures.length;
+for (const manager of config.customManagers) {
+  const label = manager.managerFilePatterns.join(', ');
+  for (const field of templatedFields) {
+    const tmpl = manager[`${field}Template`];
+    if (!tmpl || tmpl.includes(field)) {
+      continue;
+    }
+    if (manager.matchStrings.some((s) => s.includes(`(?<${field}>`))) {
+      failures.push(`${label} sets a constant ${field}Template over a (?<${field}>) capture`);
+      console.log(
+        `FAIL ${label}: constant ${field}Template "${tmpl}" overrides the (?<${field}>) capture`,
+      );
+    }
+  }
+}
+if (failures.length === shadowed) {
+  console.log('ok   no constant *Template shadows a capture group of the same name');
+}
+
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed`);
   process.exit(1);
