@@ -143,7 +143,6 @@ every dependency pinned to a `1.21`-style version.
 
 | Rule | Matches | Effect |
 |------|---------|--------|
-| Go toolchain in `go.mod` | `matchManagers: ["gomod"]`, `matchDepNames: ["go"]`, `matchDepTypes: ["golang"]` | `rangeStrategy: "bump"`, so the `go` directive tracks new Go releases. Renovate does **not** propose these by default — without the rule the line silently never moves. Raises the minimum Go version for importers, so a library with external consumers should override it back off |
 | Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label. The literal prefix overrides the semantic prefix wholesale, so runtime-dependency majors also commit as `chore(deps)!:` rather than `fix(deps)!:` |
 | Actions are never breaking | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["major"]` | `chore(actions):` prefix — restores the scope and drops the `!` that the rule above would apply. A GitHub Actions bump changes CI only, never the consuming package's public API, so it must not make semantic-release cut a major. Must stay **after** the major rule; `test/check-commit-messages.mjs` asserts that ordering |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |
@@ -202,6 +201,26 @@ which is precisely what `helpers:pinGitHubActionDigests` exists to prevent.
 Third-party action digests therefore raise a reviewable PR. Only
 `ivuorinen/actions` digests automerge, via the trusted-source rule at the end of
 `packageRules`.
+
+### Go toolchain updates need a `toolchain` directive
+
+Renovate updates the `toolchain` directive in `go.mod` by default, and this preset
+adds no rule for it. It deliberately does **not** bump the `go` directive: `go` is
+the language-compatibility floor, so raising it raises the minimum Go version for
+every importer, and Renovate's gomod docs recommend against routine bumps. `mise`
+is also moving away from reading `go` in favour of `toolchain`.
+
+The practical consequence: a `go.mod` with no `toolchain` line gets **no** Go
+version updates at all. The shape that works is a low, stable floor plus a
+tracked toolchain:
+
+```
+go 1.25.0
+
+toolchain go1.27.0
+```
+
+Fix that in the consuming repo — there is nothing to configure here.
 
 ### First-party majors are not automerged
 

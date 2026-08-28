@@ -260,28 +260,6 @@
       ]
     },
     {
-      "description": [
-        "Track the Go toolchain in go.mod. Renovate does not propose upgrades to the ",
-        "'go' directive by default — its docs treat it as 'compatible with this version ",
-        "or later' and recommend bumping it only when necessary — so without this rule ",
-        "the line silently never moves while every other ecosystem keeps updating. ",
-        "rangeStrategy 'bump' is the form Renovate's own gomod docs prescribe. ",
-        "Caveat: bumping 'go' raises the minimum Go version for anything importing the ",
-        "module. That is right for the CLIs and applications this preset serves; a ",
-        "library with external consumers should override this rule back to disabled."
-      ],
-      "matchDepNames": [
-        "go"
-      ],
-      "matchDepTypes": [
-        "golang"
-      ],
-      "matchManagers": [
-        "gomod"
-      ],
-      "rangeStrategy": "bump"
-    },
-    {
       "groupName": "development tools",
       "matchFileNames": [
         "**/Makefile",
