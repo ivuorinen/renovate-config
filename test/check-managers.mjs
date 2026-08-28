@@ -130,24 +130,67 @@ const templatedFields = [
   'extractVersion',
   'registryUrl',
 ];
+/**
+ * True when `<field>Template` replaces the `(?<field>)` capture instead of defaulting it.
+ * The exemption tests for a Handlebars *reference* to the group, not for the field name
+ * appearing anywhere: `"fixed-depName"` contains "depName" and interpolates nothing.
+ */
+function shadowsCapture(manager, field) {
+  const tmpl = manager[`${field}Template`];
+  if (!tmpl || !manager.matchStrings.some((s) => s.includes(`(?<${field}>`))) {
+    return false;
+  }
+  // {{field}}, {{{field}}} and {{#if field}} all read the capture; the inner [^{}]*
+  // keeps the match inside one mustache pair.
+  return !new RegExp(`\\{\\{[^{}]*\\b${field}\\b[^{}]*\\}\\}`).test(tmpl);
+}
+
 const shadowed = failures.length;
 for (const manager of config.customManagers) {
   const label = manager.managerFilePatterns.join(', ');
   for (const field of templatedFields) {
-    const tmpl = manager[`${field}Template`];
-    if (!tmpl || tmpl.includes(field)) {
-      continue;
-    }
-    if (manager.matchStrings.some((s) => s.includes(`(?<${field}>`))) {
+    if (shadowsCapture(manager, field)) {
       failures.push(`${label} sets a constant ${field}Template over a (?<${field}>) capture`);
       console.log(
-        `FAIL ${label}: constant ${field}Template "${tmpl}" overrides the (?<${field}>) capture`,
+        `FAIL ${label}: ${field}Template "${manager[`${field}Template`]}" never reads the ` +
+          `(?<${field}>) capture it overrides`,
       );
     }
   }
 }
 if (failures.length === shadowed) {
   console.log('ok   no constant *Template shadows a capture group of the same name');
+}
+
+// The detector above is the only thing standing between this class of bug and main, so
+// it gets its own cases. Constants that merely contain the field name are the trap.
+const detectorCases = [
+  [{ matchStrings: ['(?<datasource>x)'], datasourceTemplate: 'docker' }, true, 'constant'],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: 'fixed-depName' },
+    true,
+    'constant containing the field name',
+  ],
+  [
+    {
+      matchStrings: ['(?<versioning>x)'],
+      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
+    },
+    false,
+    'template interpolating its own group',
+  ],
+  [{ matchStrings: ['(?<currentValue>x)'], datasourceTemplate: 'docker' }, false, 'no capture'],
+];
+for (const [manager, expected, label] of detectorCases) {
+  const field = Object.keys(manager)
+    .find((k) => k.endsWith('Template'))
+    .replace('Template', '');
+  if (shadowsCapture(manager, field) === expected) {
+    console.log(`ok   shadow detector: ${label}`);
+  } else {
+    failures.push(`shadow detector misreads a ${label}`);
+    console.log(`FAIL shadow detector: ${label} should be ${expected ? '' : 'not '}reported`);
+  }
 }
 
 if (failures.length) {

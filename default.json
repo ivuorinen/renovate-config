@@ -271,7 +271,9 @@
         "Group the annotated tool pins — Makefile variables and workflow '*_VERSION' env ",
         "vars — into one PR. The workflow paths cover the customManagers:githubActionsVersions ",
         "preset in 'extends': those deps come from the custom.regex manager, not the ",
-        "github-actions one, so the actions rules above never match them."
+        "github-actions one, so the actions rules above never match them. Narrower than the ",
+        "preset extracts, on purpose: it also reads Gitea/Forgejo workflows and ",
+        "workflow-templates, which no repo here uses. Those still update, just ungrouped."
       ],
       "groupName": "development tools",
       "matchFileNames": [

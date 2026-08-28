@@ -169,7 +169,13 @@ commit — from freezing at whatever version was typed once.
 
 These deps come from the `custom.regex` manager, not `github-actions`, so the GitHub
 Actions package rules do not apply to them: no `renovate/github-action` label and no
-`chore(actions):` prefix. They join the Makefile pins in the **development tools** group.
+`chore(actions):` prefix.
+
+Grouping is narrower than extraction. The **development tools** group matches
+`.github/workflows/*.y[a]ml` and `action.y[a]ml` only, so those pins share a PR with the
+Makefile ones; a pin in a Gitea/Forgejo workflow or a `workflow-templates/` file is still
+extracted and updated, just in its own PR. Add the paths to `matchFileNames` if a repo
+ever needs them grouped.
 
 > Not covered by `test/check-managers.mjs`: that check reads regexes out of
 > `default.json`, and this one ships inside the preset.
