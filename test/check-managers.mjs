@@ -140,9 +140,14 @@ function shadowsCapture(manager, field) {
   if (!tmpl || !manager.matchStrings.some((s) => s.includes(`(?<${field}>`))) {
     return false;
   }
+  // Handlebars comments render nothing, so a group named inside one is not a reference:
+  // `{{! depName }}` compiles to "" and the constant still shadows the capture. Strip the
+  // block form first — its body may legally contain `}}`, which the inline pattern would
+  // truncate.
+  const live = tmpl.replace(/\{\{!--[\s\S]*?--\}\}/g, '').replace(/\{\{![^}]*\}\}/g, '');
   // {{field}}, {{{field}}} and {{#if field}} all read the capture; the inner [^{}]*
   // keeps the match inside one mustache pair.
-  return !new RegExp(`\\{\\{[^{}]*\\b${field}\\b[^{}]*\\}\\}`).test(tmpl);
+  return !new RegExp(`\\{\\{[^{}]*\\b${field}\\b[^{}]*\\}\\}`).test(live);
 }
 
 const shadowed = failures.length;
@@ -178,6 +183,21 @@ const detectorCases = [
     },
     false,
     'template interpolating its own group',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{! depName }}' },
+    true,
+    'Handlebars comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{!-- depName --}}fixed' },
+    true,
+    'Handlebars block comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{! note }}{{{depName}}}' },
+    false,
+    'comment alongside a real reference',
   ],
   [{ matchStrings: ['(?<currentValue>x)'], datasourceTemplate: 'docker' }, false, 'no capture'],
 ];
