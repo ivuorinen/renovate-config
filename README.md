@@ -212,7 +212,7 @@ Related packages are grouped into single PRs:
 | Group name | Match criteria |
 |------------|----------------|
 | devDependencies (non-major) | `matchDepTypes: ["devDependencies"]`, minor/patch only |
-| development tools | `matchFileNames: ["**/Makefile", "**/*.mk"]`, custom.regex manager |
+| development tools | `matchFileNames`: `**/Makefile`, `**/*.mk`, `**/.github/workflows/*.y[a]ml`, `**/action.y[a]ml`; custom.regex manager |
 | eslint | Package names matching `/eslint/` |
 | illuminate | Package names matching `/illuminate/` |
 | phpstan | Package names matching `/phpstan/` or `/larastan/` |
