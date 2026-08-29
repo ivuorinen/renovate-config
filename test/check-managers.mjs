@@ -143,8 +143,11 @@ function shadowsCapture(manager, field) {
   // Handlebars comments render nothing, so a group named inside one is not a reference:
   // `{{! depName }}` compiles to "" and the constant still shadows the capture. Strip the
   // block form first — its body may legally contain `}}`, which the inline pattern would
-  // truncate.
-  const live = tmpl.replace(/\{\{!--[\s\S]*?--\}\}/g, '').replace(/\{\{![^}]*\}\}/g, '');
+  // truncate. The `~?` covers whitespace control: `{{~! depName ~}}` is still a comment,
+  // verified against the handlebars 4.7.8 Renovate bundles.
+  const live = tmpl
+    .replace(/\{\{~?!--[\s\S]*?--~?\}\}/g, '')
+    .replace(/\{\{~?![^}]*\}\}/g, '');
   // {{field}}, {{{field}}} and {{#if field}} all read the capture; the inner [^{}]*
   // keeps the match inside one mustache pair.
   return !new RegExp(`\\{\\{[^{}]*\\b${field}\\b[^{}]*\\}\\}`).test(live);
@@ -193,6 +196,16 @@ const detectorCases = [
     { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{!-- depName --}}fixed' },
     true,
     'Handlebars block comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{~! depName ~}}' },
+    true,
+    'whitespace-control comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{~!-- depName --~}}fixed' },
+    true,
+    'whitespace-control block comment naming the field',
   ],
   [
     { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{! note }}{{{depName}}}' },
