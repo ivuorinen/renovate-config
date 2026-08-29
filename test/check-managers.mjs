@@ -112,6 +112,120 @@ if (config.customManagers.some((m) => m.versioningTemplate === 'semver')) {
   console.log('FAIL versioningTemplate must not pin strict "semver" — it rejects two-part versions');
 }
 
+// A `<field>Template` beats the capture group of the same name: Renovate's
+// createDependency() compiles the template when one is set and falls back to the
+// capture only as its `else`. So a *constant* template next to a capture of the same
+// name does not mean "default" — it means the capture is dead. `datasourceTemplate:
+// "docker"` sat on the Dockerfile manager whose comments name their own datasource, and
+// every annotated ENV resolved against the Docker datasource: `# golang-version/go` was
+// looked up as the image `go`, resolved nothing, and never moved. A template that
+// interpolates its own group (the Makefile `versioningTemplate`) is the legitimate
+// shape — it supplies a default and is exempt.
+const templatedFields = [
+  'datasource',
+  'depName',
+  'packageName',
+  'currentValue',
+  'versioning',
+  'extractVersion',
+  'registryUrl',
+];
+/**
+ * True when `<field>Template` replaces the `(?<field>)` capture instead of defaulting it.
+ * The exemption tests for a Handlebars *reference* to the group, not for the field name
+ * appearing anywhere: `"fixed-depName"` contains "depName" and interpolates nothing.
+ */
+function shadowsCapture(manager, field) {
+  const tmpl = manager[`${field}Template`];
+  if (!tmpl || !manager.matchStrings.some((s) => s.includes(`(?<${field}>`))) {
+    return false;
+  }
+  // Handlebars comments render nothing, so a group named inside one is not a reference:
+  // `{{! depName }}` compiles to "" and the constant still shadows the capture. Strip the
+  // block form first — its body may legally contain `}}`, which the inline pattern would
+  // truncate. The `~?` covers whitespace control: `{{~! depName ~}}` is still a comment,
+  // verified against the handlebars 4.7.8 Renovate bundles.
+  const live = tmpl
+    .replace(/\{\{~?!--[\s\S]*?--~?\}\}/g, '')
+    .replace(/\{\{~?![^}]*\}\}/g, '');
+  // {{field}}, {{{field}}} and {{#if field}} all read the capture; the inner [^{}]*
+  // keeps the match inside one mustache pair.
+  return !new RegExp(`\\{\\{[^{}]*\\b${field}\\b[^{}]*\\}\\}`).test(live);
+}
+
+const shadowed = failures.length;
+for (const manager of config.customManagers) {
+  const label = manager.managerFilePatterns.join(', ');
+  for (const field of templatedFields) {
+    if (shadowsCapture(manager, field)) {
+      failures.push(`${label} sets a constant ${field}Template over a (?<${field}>) capture`);
+      console.log(
+        `FAIL ${label}: ${field}Template "${manager[`${field}Template`]}" never reads the ` +
+          `(?<${field}>) capture it overrides`,
+      );
+    }
+  }
+}
+if (failures.length === shadowed) {
+  console.log('ok   no constant *Template shadows a capture group of the same name');
+}
+
+// The detector above is the only thing standing between this class of bug and main, so
+// it gets its own cases. Constants that merely contain the field name are the trap.
+const detectorCases = [
+  [{ matchStrings: ['(?<datasource>x)'], datasourceTemplate: 'docker' }, true, 'constant'],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: 'fixed-depName' },
+    true,
+    'constant containing the field name',
+  ],
+  [
+    {
+      matchStrings: ['(?<versioning>x)'],
+      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
+    },
+    false,
+    'template interpolating its own group',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{! depName }}' },
+    true,
+    'Handlebars comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{!-- depName --}}fixed' },
+    true,
+    'Handlebars block comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{~! depName ~}}' },
+    true,
+    'whitespace-control comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{~!-- depName --~}}fixed' },
+    true,
+    'whitespace-control block comment naming the field',
+  ],
+  [
+    { matchStrings: ['(?<depName>x)'], depNameTemplate: '{{! note }}{{{depName}}}' },
+    false,
+    'comment alongside a real reference',
+  ],
+  [{ matchStrings: ['(?<currentValue>x)'], datasourceTemplate: 'docker' }, false, 'no capture'],
+];
+for (const [manager, expected, label] of detectorCases) {
+  const field = Object.keys(manager)
+    .find((k) => k.endsWith('Template'))
+    .replace('Template', '');
+  if (shadowsCapture(manager, field) === expected) {
+    console.log(`ok   shadow detector: ${label}`);
+  } else {
+    failures.push(`shadow detector misreads a ${label}`);
+    console.log(`FAIL shadow detector: ${label} should be ${expected ? '' : 'not '}reported`);
+  }
+}
+
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed`);
   process.exit(1);
