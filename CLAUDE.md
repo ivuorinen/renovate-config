@@ -27,7 +27,7 @@ prek run --all-files
 # or: pre-commit run --all-files
 ```
 
-This runs two validators against `default.json`: `renovate-config-validator --strict` (Renovate's own validator, also run separately against `.github/renovate.json`) and `check-renovate-preset` (JSON Schema validation via [check-jsonschema](https://github.com/python-jsonschema/check-jsonschema)). A third hook, `check-custom-managers`, runs `node test/check-managers.mjs`. The hooks also enforce JSON formatting (`pretty-format-json --autofix --no-ensure-ascii`), trailing whitespace removal, and other checks.
+This validates `default.json` with `renovate-config-validator --strict` (Renovate's own validator, also run separately against `.github/renovate.json`). It does not check option *values* such as manager names — it accepted a made-up `matchManagers` entry — so the tests below carry that load. Two local hooks run the tests: `check-custom-managers` (`node test/check-managers.mjs`) and `check-commit-messages` (`node test/check-commit-messages.mjs`). The hooks also enforce JSON formatting (`pretty-format-json --autofix --no-ensure-ascii`), trailing whitespace removal, and other checks.
 
 The same hooks run in CI via `.github/workflows/validate.yml`. Do not rely on local hooks alone: consumers extend `github>ivuorinen/renovate-config`, which resolves the default branch HEAD on every Renovate run, so an unvalidated commit on `main` reaches every dependent repository immediately.
 

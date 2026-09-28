@@ -318,7 +318,6 @@ This executes:
 - **`pretty-format-json`** -- ensures consistent JSON formatting
 - **`renovate-config-validator --strict`** -- Renovate's own config validation,
   run against both `default.json` and `.github/renovate.json`
-- **`check-renovate-preset`** -- JSON Schema validation against `renovate-schema.json`
 - **`check-custom-managers`** -- runs `test/check-managers.mjs`, which applies the
   `customManagers` regexes from `default.json` to `test/fixtures/` and asserts what
   they extract. `renovate-config-validator` only checks that a match string
