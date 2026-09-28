@@ -101,6 +101,39 @@ for (const { rule, index } of prefixed.filter(({ rule }) => matchesNonBreaking(r
   }
 }
 
+// 2b. Semantic scopes on target rules, prefixed or not. Renovate builds the prefix
+//     from semanticCommitType + semanticCommitScope whenever no literal prefix
+//     applies, so a rule like the github-actions label rule — scope only, no
+//     prefix — decides every non-major commit. A 'deps' scope there would slip past
+//     the prefix checks above and make those updates release again.
+for (const target of NON_BREAKING) {
+  const selecting = rules
+    .map((rule, index) => ({ rule, index }))
+    .filter(({ rule }) => targetsOf(rule).includes(target));
+  for (const { rule, index } of selecting) {
+    if (rule.semanticCommitScope !== undefined && rule.semanticCommitScope !== target.scope) {
+      fail(
+        `packageRules[${index}] gives ${target.name} semanticCommitScope ` +
+          `${JSON.stringify(rule.semanticCommitScope)}; expected "${target.scope}"`,
+      );
+    }
+  }
+  const coversAllUpdates = selecting.some(
+    ({ rule }) =>
+      !rule.matchUpdateTypes &&
+      (rule.semanticCommitScope === target.scope ||
+        rule.commitMessagePrefix?.startsWith(`chore(${target.scope}): `)),
+  );
+  if (coversAllUpdates) {
+    pass(`${target.name} gets the "${target.scope}" scope for every update type`);
+  } else {
+    fail(
+      `no rule gives ${target.name} the "${target.scope}" scope for every update type — ` +
+        'its non-major updates fall back to "deps" and release',
+    );
+  }
+}
+
 // 3. Coverage and ordering. Renovate applies packageRules in array order and later
 //    matches win, so each target's non-breaking prefix only survives if it sits
 //    after every unscoped breaking prefix. Without this check, moving a rule up —
