@@ -47,7 +47,21 @@ const fail = (msg) => {
 };
 const pass = (msg) => console.log(`ok   ${msg}`);
 
-const matchesActions = (rule) => (rule.matchManagers ?? []).includes('github-actions');
+// Updates that never touch a consuming package's public API, so a major bump of one
+// must never carry the "!" that makes semantic-release cut a major. Each target
+// names how a packageRule selects it and the one scope its override must use:
+// 'actions' is reserved for GitHub Actions, so a dev-dependency or .nvmrc bump is
+// never mislabelled as a workflow change.
+const NON_BREAKING = [
+  { name: 'github-actions', field: 'matchManagers', scope: 'actions' },
+  { name: 'nvm', field: 'matchManagers', scope: 'tooling' },
+  { name: 'pre-commit', field: 'matchManagers', scope: 'tooling' },
+  { name: 'devDependencies', field: 'matchDepTypes', scope: 'dev-deps' },
+  { name: 'require-dev', field: 'matchDepTypes', scope: 'dev-deps' },
+];
+
+const targetsOf = (rule) => NON_BREAKING.filter((t) => (rule[t.field] ?? []).includes(t.name));
+const matchesNonBreaking = (rule) => targetsOf(rule).length > 0;
 const prefixed = rules
   .map((rule, index) => ({ rule, index }))
   .filter(({ rule }) => typeof rule.commitMessagePrefix === 'string');
@@ -65,51 +79,133 @@ for (const { rule, index } of prefixed) {
   }
 }
 
-// 2. No rule scoped to the github-actions manager marks its updates breaking.
-//    A GitHub Actions bump changes CI only, never the consuming package's public
-//    API, so the "!" must never appear on one. See CLAUDE.md.
-for (const { rule, index } of prefixed.filter(({ rule }) => matchesActions(rule))) {
+// 2. No rule selecting a non-breaking target marks its updates breaking, and its
+//    prefix uses that target's scope. See CLAUDE.md.
+for (const { rule, index } of prefixed.filter(({ rule }) => matchesNonBreaking(rule))) {
+  const names = targetsOf(rule).map((t) => t.name).join(', ');
   if (rule.commitMessagePrefix.includes('!')) {
     fail(
-      `packageRules[${index}] marks github-actions updates breaking with ` +
-        `${JSON.stringify(rule.commitMessagePrefix)} — actions bumps are never breaking`,
+      `packageRules[${index}] marks ${names} updates breaking with ` +
+        `${JSON.stringify(rule.commitMessagePrefix)} — these bumps are never breaking`,
     );
   } else {
-    pass(`packageRules[${index}] github-actions prefix carries no breaking marker`);
+    pass(`packageRules[${index}] ${names} prefix carries no breaking marker`);
   }
-}
-
-// 3. Ordering invariant. Renovate applies packageRules in array order and later
-//    matches win, so a github-actions prefix only survives if it sits after every
-//    unscoped breaking prefix that would also match an actions update. Without
-//    this check, moving the rule up silently restores "chore(deps)!:" on actions.
-const breakingBefore = prefixed.filter(
-  ({ rule }) => rule.commitMessagePrefix.includes('!') && !rule.matchManagers,
-);
-const actionsPrefixes = prefixed.filter(({ rule }) => matchesActions(rule));
-
-if (breakingBefore.length && !actionsPrefixes.length) {
-  fail(
-    'a breaking commitMessagePrefix applies to all managers and no github-actions rule ' +
-      'overrides it — actions majors would ship as breaking changes',
-  );
-}
-for (const actions of actionsPrefixes) {
-  for (const breaking of breakingBefore) {
-    if (breaking.index > actions.index) {
+  for (const target of targetsOf(rule)) {
+    if (!rule.commitMessagePrefix.startsWith(`chore(${target.scope}): `)) {
       fail(
-        `packageRules[${breaking.index}] (${JSON.stringify(breaking.rule.commitMessagePrefix)}) ` +
-          `comes after the github-actions override at packageRules[${actions.index}] and ` +
-          'overwrites it — later matching rules win',
-      );
-    } else {
-      pass(
-        `packageRules[${actions.index}] github-actions override still wins over ` +
-          `packageRules[${breaking.index}]`,
+        `packageRules[${index}] gives ${target.name} ${JSON.stringify(rule.commitMessagePrefix)}; ` +
+          `expected "chore(${target.scope}): "`,
       );
     }
   }
 }
+
+// 2b. Semantic scopes on target rules, prefixed or not. Renovate builds the prefix
+//     from semanticCommitType + semanticCommitScope whenever no literal prefix
+//     applies, so a rule like the github-actions label rule — scope only, no
+//     prefix — decides every non-major commit. A 'deps' scope there would slip past
+//     the prefix checks above and make those updates release again.
+for (const target of NON_BREAKING) {
+  const selecting = rules
+    .map((rule, index) => ({ rule, index }))
+    .filter(({ rule }) => targetsOf(rule).includes(target));
+  for (const { rule, index } of selecting) {
+    if (rule.semanticCommitScope !== undefined && rule.semanticCommitScope !== target.scope) {
+      fail(
+        `packageRules[${index}] gives ${target.name} semanticCommitScope ` +
+          `${JSON.stringify(rule.semanticCommitScope)}; expected "${target.scope}"`,
+      );
+    }
+  }
+  const coversAllUpdates = selecting.some(
+    ({ rule }) =>
+      !rule.matchUpdateTypes &&
+      (rule.semanticCommitScope === target.scope ||
+        rule.commitMessagePrefix?.startsWith(`chore(${target.scope}): `)),
+  );
+  if (coversAllUpdates) {
+    pass(`${target.name} gets the "${target.scope}" scope for every update type`);
+  } else {
+    fail(
+      `no rule gives ${target.name} the "${target.scope}" scope for every update type — ` +
+        'its non-major updates fall back to "deps" and release',
+    );
+  }
+}
+
+// 3. Coverage and ordering. Renovate applies packageRules in array order and later
+//    matches win, so each target's non-breaking prefix only survives if it sits
+//    after every unscoped breaking prefix. Without this check, moving a rule up —
+//    or dropping one — silently restores "chore(deps)!:" on that target's majors.
+const breakingBefore = prefixed.filter(
+  ({ rule }) =>
+    rule.commitMessagePrefix.includes('!') && !rule.matchManagers && !rule.matchDepTypes,
+);
+
+for (const target of NON_BREAKING) {
+  const overrides = prefixed.filter(({ rule }) => targetsOf(rule).includes(target));
+  if (breakingBefore.length && !overrides.length) {
+    fail(
+      `a breaking commitMessagePrefix applies to every update and no ${target.name} rule ` +
+        `overrides it — ${target.name} majors would ship as breaking changes`,
+    );
+  }
+  for (const override of overrides) {
+    for (const breaking of breakingBefore) {
+      if (breaking.index > override.index) {
+        fail(
+          `packageRules[${breaking.index}] (${JSON.stringify(breaking.rule.commitMessagePrefix)}) ` +
+            `comes after the ${target.name} override at packageRules[${override.index}] and ` +
+            'overwrites it — later matching rules win',
+        );
+      } else {
+        pass(
+          `packageRules[${override.index}] ${target.name} override still wins over ` +
+            `packageRules[${breaking.index}]`,
+        );
+      }
+    }
+  }
+}
+
+// 4. The 'actions' scope belongs to GitHub Actions alone. Any other rule setting it
+//    — as a semanticCommitScope or inside a literal prefix — labels a non-workflow
+//    bump as a workflow change in every consuming repo's history and release notes.
+rules.forEach((rule, index) => {
+  const usesActions =
+    rule.semanticCommitScope === 'actions' ||
+    (typeof rule.commitMessagePrefix === 'string' && rule.commitMessagePrefix.includes('(actions)'));
+  if (!usesActions) return;
+  const managers = rule.matchManagers ?? [];
+  if (managers.length === 1 && managers[0] === 'github-actions') {
+    pass(`packageRules[${index}] uses the actions scope for github-actions only`);
+  } else {
+    fail(
+      `packageRules[${index}] uses the actions scope for ${JSON.stringify(managers)} — ` +
+        'only a rule matching exactly ["github-actions"] may',
+    );
+  }
+});
+
+// 5. Groups that can mix runtime and dev dependencies split the dev half out. A
+//    grouped branch takes its prefix from the first upgrade sorted by depName, so a
+//    group holding both would title a runtime bump 'chore(dev-deps)' and it would
+//    never release. A group scoped by matchDepTypes or matchManagers (the dev-only
+//    group, custom.regex tool pins, first-party actions) cannot mix, so it is exempt.
+const DEV_SUFFIX =
+  "{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}";
+rules.forEach((rule, index) => {
+  if (typeof rule.groupName !== 'string' || rule.matchDepTypes || rule.matchManagers) return;
+  if (rule.groupName.endsWith(DEV_SUFFIX)) {
+    pass(`packageRules[${index}] group splits dev dependencies out`);
+  } else {
+    fail(
+      `packageRules[${index}] groupName ${JSON.stringify(rule.groupName)} can mix runtime and ` +
+        'dev dependencies — append the (dev) suffix template',
+    );
+  }
+});
 
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed`);

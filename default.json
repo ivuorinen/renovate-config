@@ -211,6 +211,27 @@
       "semanticCommitScope": "actions"
     },
     {
+      "commitMessagePrefix": "chore(tooling): ",
+      "description": [
+        ".nvmrc (nvm manager) and pre-commit hook updates change local tooling and CI, ",
+        "never a package's public API, so they get their own 'tooling' scope — 'actions' ",
+        "is reserved for GitHub Actions. The default 'deps' scope made semantic-release ",
+        "in the consuming repo cut a patch for every Node bump ",
+        "(ivuorinen/base-configs#577 and ivuorinen/base-configs-commitlint#196 were ",
+        "retitled by hand), and the global major rule's 'chore(deps)!: ' cut a major. ",
+        "semantic-release-config has a release rule for 'deps' only, so ",
+        "'chore(tooling): ' releases nothing — as long as it carries no '!'. The prefix ",
+        "is literal for the same reason as the actions major rule below: a packageRule ",
+        "can only override the major rule's prefix, not unset it. A repo whose .nvmrc ",
+        "does ship to users (e.g. a Docker image built from it) overrides this locally."
+      ],
+      "matchManagers": [
+        "nvm",
+        "pre-commit"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
       "addLabels": [
         "renovate/pip"
       ],
@@ -227,6 +248,24 @@
         "patch",
         "minor"
       ]
+    },
+    {
+      "commitMessagePrefix": "chore(dev-deps): ",
+      "description": [
+        "devDependencies (npm) and require-dev (Composer) never reach a package's ",
+        "consumers, so no update to one — major included — is a breaking change. The ",
+        "global major rule's 'chore(deps)!: ' made semantic-release in the consuming repo ",
+        "cut a major for a test-runner bump. semantic-release-config has a release rule ",
+        "for 'deps' only, so 'chore(dev-deps): ' releases nothing. The prefix is literal ",
+        "because a packageRule can only override the major rule's prefix, not unset it; ",
+        "semanticCommitScope is set to match so the two never disagree. Must stay after ",
+        "the major rule: later matching rules win."
+      ],
+      "matchDepTypes": [
+        "devDependencies",
+        "require-dev"
+      ],
+      "semanticCommitScope": "dev-deps"
     },
     {
       "description": [
@@ -289,50 +328,62 @@
       ]
     },
     {
-      "groupName": "eslint",
+      "description": [
+        "Every ecosystem group below, and the '@ivuorinen packages' group, appends ",
+        "' (dev)' to its name for devDependencies and require-dev. The dev-deps rule ",
+        "gives dev updates 'chore(dev-deps): ' (no release) while runtime updates keep ",
+        "'chore(deps)', and a grouped branch takes its commitMessagePrefix from the ",
+        "first upgrade sorted by depName (Renovate's generateBranchConfig). A group ",
+        "holding both would title a runtime bump 'chore(dev-deps)' whenever a dev ",
+        "package sorted first, and semantic-release would never ship it. groupName is ",
+        "compiled as a template per upgrade, so the suffix splits the group into its ",
+        "own branch and PR. test/check-commit-messages.mjs asserts every group that can ",
+        "mix dependency types carries the suffix."
+      ],
+      "groupName": "eslint{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/eslint/"
       ]
     },
     {
-      "groupName": "illuminate",
+      "groupName": "illuminate{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/illuminate/"
       ]
     },
     {
-      "groupName": "phpstan",
+      "groupName": "phpstan{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/phpstan/",
         "/larastan/"
       ]
     },
     {
-      "groupName": "semantic-release",
+      "groupName": "semantic-release{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/semantic-release/"
       ]
     },
     {
-      "groupName": "stylelint",
+      "groupName": "stylelint{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/stylelint/"
       ]
     },
     {
-      "groupName": "tailwind",
+      "groupName": "tailwind{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/tailwind/"
       ]
     },
     {
-      "groupName": "vite",
+      "groupName": "vite{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/vite/"
       ]
     },
     {
-      "groupName": "vue",
+      "groupName": "vue{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/vue/"
       ]
@@ -348,7 +399,7 @@
         "overwritten for a third of the scope. Grouping, priority and the release-age ",
         "waiver apply to every update type; automerge is granted separately below."
       ],
-      "groupName": "@ivuorinen packages",
+      "groupName": "@ivuorinen packages{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "@ivuorinen/**"
       ],
