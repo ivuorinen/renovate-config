@@ -209,7 +209,12 @@ ever needs them grouped.
 
 ### Dependency groups
 
-Related packages are grouped into single PRs:
+Related packages are grouped into single PRs. Every package-name group below
+(eslint through @ivuorinen packages) puts its `devDependencies` and `require-dev`
+members in a separate `<name> (dev)` group, such as `eslint (dev)`. Dev updates are
+titled `chore(dev-deps):` and release nothing, while runtime updates keep
+`chore(deps)`. A grouped branch takes one commit prefix from its first member by
+name, so a shared group could hide a runtime update behind the dev-deps prefix:
 
 | Group name | Match criteria |
 |------------|----------------|

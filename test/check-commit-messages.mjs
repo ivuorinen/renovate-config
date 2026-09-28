@@ -188,6 +188,25 @@ rules.forEach((rule, index) => {
   }
 });
 
+// 5. Groups that can mix runtime and dev dependencies split the dev half out. A
+//    grouped branch takes its prefix from the first upgrade sorted by depName, so a
+//    group holding both would title a runtime bump 'chore(dev-deps)' and it would
+//    never release. A group scoped by matchDepTypes or matchManagers (the dev-only
+//    group, custom.regex tool pins, first-party actions) cannot mix, so it is exempt.
+const DEV_SUFFIX =
+  "{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}";
+rules.forEach((rule, index) => {
+  if (typeof rule.groupName !== 'string' || rule.matchDepTypes || rule.matchManagers) return;
+  if (rule.groupName.endsWith(DEV_SUFFIX)) {
+    pass(`packageRules[${index}] group splits dev dependencies out`);
+  } else {
+    fail(
+      `packageRules[${index}] groupName ${JSON.stringify(rule.groupName)} can mix runtime and ` +
+        'dev dependencies — append the (dev) suffix template',
+    );
+  }
+});
+
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed`);
   process.exit(1);

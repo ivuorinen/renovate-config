@@ -328,50 +328,62 @@
       ]
     },
     {
-      "groupName": "eslint",
+      "description": [
+        "Every ecosystem group below, and the '@ivuorinen packages' group, appends ",
+        "' (dev)' to its name for devDependencies and require-dev. The dev-deps rule ",
+        "gives dev updates 'chore(dev-deps): ' (no release) while runtime updates keep ",
+        "'chore(deps)', and a grouped branch takes its commitMessagePrefix from the ",
+        "first upgrade sorted by depName (Renovate's generateBranchConfig). A group ",
+        "holding both would title a runtime bump 'chore(dev-deps)' whenever a dev ",
+        "package sorted first, and semantic-release would never ship it. groupName is ",
+        "compiled as a template per upgrade, so the suffix splits the group into its ",
+        "own branch and PR. test/check-commit-messages.mjs asserts every group that can ",
+        "mix dependency types carries the suffix."
+      ],
+      "groupName": "eslint{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/eslint/"
       ]
     },
     {
-      "groupName": "illuminate",
+      "groupName": "illuminate{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/illuminate/"
       ]
     },
     {
-      "groupName": "phpstan",
+      "groupName": "phpstan{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/phpstan/",
         "/larastan/"
       ]
     },
     {
-      "groupName": "semantic-release",
+      "groupName": "semantic-release{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/semantic-release/"
       ]
     },
     {
-      "groupName": "stylelint",
+      "groupName": "stylelint{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/stylelint/"
       ]
     },
     {
-      "groupName": "tailwind",
+      "groupName": "tailwind{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/tailwind/"
       ]
     },
     {
-      "groupName": "vite",
+      "groupName": "vite{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/vite/"
       ]
     },
     {
-      "groupName": "vue",
+      "groupName": "vue{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "/vue/"
       ]
@@ -387,7 +399,7 @@
         "overwritten for a third of the scope. Grouping, priority and the release-age ",
         "waiver apply to every update type; automerge is granted separately below."
       ],
-      "groupName": "@ivuorinen packages",
+      "groupName": "@ivuorinen packages{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}",
       "matchPackageNames": [
         "@ivuorinen/**"
       ],
