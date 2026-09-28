@@ -188,6 +188,8 @@ ever needs them grouped.
 |------|---------|--------|
 | Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label. The literal prefix overrides the semantic prefix wholesale, so runtime-dependency majors also commit as `chore(deps)!:` rather than `fix(deps)!:` |
 | Actions are never breaking | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["major"]` | `chore(actions):` prefix — restores the scope and drops the `!` that the rule above would apply. A GitHub Actions bump changes CI only, never the consuming package's public API, so it must not make semantic-release cut a major. Must stay **after** the major rule; `test/check-commit-messages.mjs` asserts that ordering |
+| Tooling is never breaking | `matchManagers: ["nvm", "pre-commit"]`, every update type | `chore(tooling):` prefix. `.nvmrc` and pre-commit hooks change local tooling and CI only. The `actions` scope is reserved for GitHub Actions |
+| Dev dependencies are never breaking | `matchDepTypes: ["devDependencies", "require-dev"]`, every update type | `chore(dev-deps):` prefix. Dev dependencies never reach consumers. `@ivuorinen/semantic-release-config` has a release rule for `deps` only, so neither `dev-deps` nor `tooling` cuts a release |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |
 | Minor label | `matchUpdateTypes: ["minor"]` | `type/minor` label |
 | Patch label | `matchUpdateTypes: ["patch"]` | `type/patch` label |
@@ -324,8 +326,11 @@ This executes:
   regex that silently stops extracting. Requires `node` on `PATH`
 - **`check-commit-messages`** -- runs `test/check-commit-messages.mjs`, which asserts
   every `commitMessagePrefix` in `default.json` is a valid conventional-commit prefix,
-  that no `github-actions`-scoped rule carries a `!` breaking marker, and that the
-  actions override still sits after every unscoped breaking prefix. The validator
+  that no rule for GitHub Actions, `nvm`, `pre-commit`, `devDependencies` or
+  `require-dev` carries a `!` breaking marker or a scope other than its own
+  (`actions`, `tooling`, `dev-deps`), that each of those overrides sits after every
+  unscoped breaking prefix, and that only a GitHub Actions rule uses the `actions`
+  scope. The validator
   types `commitMessagePrefix` as a plain string, so none of those defects fail it —
   they fail commitlint in consuming repos instead. Requires `node` on `PATH`
 - Standard checks (trailing whitespace, end-of-file fixer, etc.)
