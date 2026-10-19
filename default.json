@@ -389,6 +389,287 @@
       ]
     },
     {
+      "commitMessagePrefix": "chore(tooling): ",
+      "description": [
+        "Tool groups, this rule through zizmor. One tool reaches a repo through several ",
+        "managers — a mise pin, a pre-commit hook, an Action plus the version its with: ",
+        "input installs, a PyPI/npm/Go path — each with its own depName, so Renovate opened ",
+        "one PR per source and the pins drifted apart. Each group lists every packageName ",
+        "those managers resolve the tool to (mise maps short names to the GitHub repo, the ",
+        "github-actions manager maps known with: inputs the same way). The literal ",
+        "'chore(tooling): ' is required, not cosmetic: a grouped branch takes its prefix ",
+        "from the first upgrade sorted by depName, and these groups mix chore(deps), ",
+        "chore(tooling) and chore(actions) members, so the title would follow the alphabet ",
+        "and a mise major would ship as 'chore(deps)!: '. Set on the group, every member ",
+        "carries it: never breaking, never a release. That also removes the reason for the ",
+        "' (dev)' suffix, which would split an npm devDependency from its own hook. ",
+        "group.commitMessageTopic keeps a version in the title: Renovate drops ",
+        "commitMessageExtra when members' new versions are spelled differently (an Action ",
+        "at v7 and the binary at v2, or a hook tag v1.7.12 and a mise pin 1.7.12), leaving ",
+        "a bare 'update goreleaser', so the topic then lists the distinct target versions, ",
+        "prettyNewVersion-normalised. When the spellings agree, the extra survives and the ",
+        "topic adds nothing. Must stay after the development tools group, which would ",
+        "otherwise keep Makefile and workflow pins of these tools, and after every other ",
+        "prefixed rule (test/check-commit-messages.mjs asserts the latter): later matching ",
+        "rules win."
+      ],
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "actionlint",
+      "matchPackageNames": [
+        "github.com/rhysd/actionlint/cmd/actionlint",
+        "raven-actions/actionlint",
+        "rhysd/actionlint"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "checkov",
+      "matchPackageNames": [
+        "bridgecrewio/checkov",
+        "checkov"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "cosign",
+      "matchPackageNames": [
+        "sigstore/cosign",
+        "sigstore/cosign-installer"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "editorconfig-checker",
+      "matchPackageNames": [
+        "editorconfig-checker",
+        "editorconfig-checker/action-editorconfig-checker",
+        "editorconfig-checker/editorconfig-checker",
+        "editorconfig-checker/editorconfig-checker.python"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "gitleaks",
+      "matchPackageNames": [
+        "gitleaks/gitleaks",
+        "gitleaks/gitleaks-action"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "golangci-lint",
+      "matchPackageNames": [
+        "github.com/golangci/golangci-lint/v*/cmd/golangci-lint",
+        "golangci/golangci-lint",
+        "golangci/golangci-lint-action"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "goreleaser",
+      "matchPackageNames": [
+        "github.com/goreleaser/goreleaser/v*",
+        "goreleaser/goreleaser",
+        "goreleaser/goreleaser-action"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "gosec",
+      "matchPackageNames": [
+        "github.com/securego/gosec/v*/cmd/gosec",
+        "securego/gosec"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "markdownlint-cli",
+      "matchPackageNames": [
+        "igorshubovych/markdownlint-cli",
+        "markdownlint-cli"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "markdownlint-cli2",
+      "matchPackageNames": [
+        "DavidAnson/markdownlint-cli2",
+        "DavidAnson/markdownlint-cli2-action",
+        "markdownlint-cli2"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "ruff",
+      "matchPackageNames": [
+        "astral-sh/ruff",
+        "astral-sh/ruff-action",
+        "astral-sh/ruff-pre-commit",
+        "ruff"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "shellcheck",
+      "matchPackageNames": [
+        "koalaman/shellcheck",
+        "koalaman/shellcheck-precommit",
+        "shellcheck-py",
+        "shellcheck-py/shellcheck-py"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "shfmt",
+      "matchPackageNames": [
+        "mvdan.cc/sh/v*/cmd/shfmt",
+        "mvdan/sh",
+        "scop/pre-commit-shfmt"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "staticcheck",
+      "matchPackageNames": [
+        "dominikh/go-tools",
+        "dominikh/go-tools/staticcheck",
+        "dominikh/staticcheck-action",
+        "honnef.co/go/tools/cmd/staticcheck"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "syft",
+      "matchPackageNames": [
+        "anchore/sbom-action",
+        "anchore/syft"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "trivy",
+      "matchPackageNames": [
+        "aquasecurity/setup-trivy",
+        "aquasecurity/trivy",
+        "aquasecurity/trivy-action"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "uv",
+      "matchPackageNames": [
+        "astral-sh/setup-uv",
+        "astral-sh/uv",
+        "astral-sh/uv-pre-commit",
+        "uv"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "yamlfmt",
+      "matchPackageNames": [
+        "github.com/google/yamlfmt/cmd/yamlfmt",
+        "google/yamlfmt"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "yamllint",
+      "matchPackageNames": [
+        "adrienverge/yamllint",
+        "yamllint"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
+      "commitMessagePrefix": "chore(tooling): ",
+      "group": {
+        "commitMessageTopic": "{{{groupName}}}{{#unless commitMessageExtra}} to {{#each (distinct (lookupArray upgrades 'prettyNewVersion'))}}{{#unless @first}}, {{/unless}}{{{.}}}{{/each}}{{/unless}}"
+      },
+      "groupName": "zizmor",
+      "matchPackageNames": [
+        "zizmor",
+        "zizmorcore/zizmor",
+        "zizmorcore/zizmor-action",
+        "zizmorcore/zizmor-pre-commit"
+      ],
+      "semanticCommitScope": "tooling"
+    },
+    {
       "description": [
         "Fast-track first-party packages. This rule and the three below MUST stay last ",
         "in packageRules: the ecosystem groups above match on unanchored regexes ",

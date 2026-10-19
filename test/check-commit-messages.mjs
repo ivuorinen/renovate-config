@@ -193,10 +193,16 @@ rules.forEach((rule, index) => {
 //    group holding both would title a runtime bump 'chore(dev-deps)' and it would
 //    never release. A group scoped by matchDepTypes or matchManagers (the dev-only
 //    group, custom.regex tool pins, first-party actions) cannot mix, so it is exempt.
+//    So is a group with its own literal prefix (the tool groups): every member
+//    carries that prefix, so no member's prefix can leak onto another. Check 6
+//    holds those groups to it.
 const DEV_SUFFIX =
   "{{#if (or (equals depType 'devDependencies') (equals depType 'require-dev'))}} (dev){{/if}}";
+const isPrefixedGroup = (rule) =>
+  typeof rule.groupName === 'string' && typeof rule.commitMessagePrefix === 'string';
 rules.forEach((rule, index) => {
   if (typeof rule.groupName !== 'string' || rule.matchDepTypes || rule.matchManagers) return;
+  if (isPrefixedGroup(rule)) return;
   if (rule.groupName.endsWith(DEV_SUFFIX)) {
     pass(`packageRules[${index}] group splits dev dependencies out`);
   } else {
@@ -204,6 +210,35 @@ rules.forEach((rule, index) => {
       `packageRules[${index}] groupName ${JSON.stringify(rule.groupName)} can mix runtime and ` +
         'dev dependencies — append the (dev) suffix template',
     );
+  }
+});
+
+// 6. A group that sets its own prefix only stops the first-member leak in check 5
+//    if the prefix survives to every member: it must carry no "!", agree with its
+//    semanticCommitScope, and sit after every other prefixed rule. Placed earlier,
+//    the actions major rule or the dev-deps rule would overwrite it for their
+//    members, and the group title would follow the alphabet again.
+const lastOtherPrefix = Math.max(
+  -1,
+  ...prefixed.filter(({ rule }) => !isPrefixedGroup(rule)).map(({ index }) => index),
+);
+rules.forEach((rule, index) => {
+  if (!isPrefixedGroup(rule)) return;
+  const name = JSON.stringify(rule.groupName);
+  if (rule.commitMessagePrefix.includes('!')) {
+    fail(`packageRules[${index}] group ${name} prefix ${JSON.stringify(rule.commitMessagePrefix)} is breaking`);
+  } else if (rule.commitMessagePrefix !== `chore(${rule.semanticCommitScope}): `) {
+    fail(
+      `packageRules[${index}] group ${name} prefix ${JSON.stringify(rule.commitMessagePrefix)} ` +
+        `disagrees with semanticCommitScope ${JSON.stringify(rule.semanticCommitScope)}`,
+    );
+  } else if (index < lastOtherPrefix) {
+    fail(
+      `packageRules[${index}] group ${name} comes before packageRules[${lastOtherPrefix}], ` +
+        'whose prefix overwrites it — later matching rules win',
+    );
+  } else {
+    pass(`packageRules[${index}] group ${name} prefix reaches every member`);
   }
 });
 
