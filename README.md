@@ -188,10 +188,10 @@ instead, so it moves together with the tool's hook, Action and mise pin.
 
 | Rule | Matches | Effect |
 |------|---------|--------|
-| Major commit prefix | `matchUpdateTypes: ["major"]` | `chore(deps)!:` prefix, `type/major` label. The literal prefix overrides the semantic prefix wholesale, so runtime-dependency majors also commit as `chore(deps)!:` rather than `fix(deps)!:` |
-| Actions are never breaking | `matchManagers: ["github-actions"]`, `matchUpdateTypes: ["major"]` | `chore(actions):` prefix — restores the scope and drops the `!` that the rule above would apply. A GitHub Actions bump changes CI only, never the consuming package's public API, so it must not make semantic-release cut a major. Must stay **after** the major rule; `test/check-commit-messages.mjs` asserts that ordering |
-| Tooling is never breaking | `matchManagers: ["nvm", "pre-commit"]`, every update type | `chore(tooling):` prefix. `.nvmrc` and pre-commit hooks change local tooling and CI only. The `actions` scope is reserved for GitHub Actions |
-| Dev dependencies are never breaking | `matchDepTypes: ["devDependencies", "require-dev"]`, every update type | `chore(dev-deps):` prefix. Dev dependencies never reach consumers. `@ivuorinen/semantic-release-config` has a release rule for `deps` only, so neither `dev-deps` nor `tooling` cuts a release |
+| Major label | `matchUpdateTypes: ["major"]` | `type/major` label only. No update is marked breaking: a dependency's major is not a major of the package that depends on it, so a runtime-dependency major commits as `fix(deps):` like any other runtime update and releases a patch. When a package cuts a major is its owner's call, made in a commit of their own |
+| Tooling releases nothing | `matchManagers: ["nvm", "pre-commit"]`, every update type | `tooling` scope. `.nvmrc` and pre-commit hooks change local tooling and CI only. The `actions` scope is reserved for GitHub Actions |
+| Dev dependencies release nothing | `matchDepTypes: ["devDependencies", "require-dev"]`, every update type | `dev-deps` scope. Dev dependencies never reach consumers. `@ivuorinen/semantic-release-config` has a release rule for `deps` only, so neither `dev-deps`, `tooling` nor `lockfile` cuts a release |
+| Lock-file-only updates release nothing | `matchJsonata: ["isLockfileUpdate = true"]`, every update type | `lockfile` scope. An update whose new version already satisfies the range changes only the lock file, which no consumer installs. Every vulnerability alert lands this way when it can (`vulnerabilityAlerts` defaults to `rangeStrategy: "update-lockfile"`), so `chore(lockfile): update dependency undici (8.11.2 → 8.12.2) [SECURITY]` no longer cuts an empty patch. Renovate's own `semanticPrefixFixDepsChoreOthers` selects these updates with the same expression; `matchUpdateTypes` cannot, since `updateType` stays major, minor or patch. Sits after the dev-deps rule, so a lock-file-only dev dependency update reads `lockfile` too |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |
 | Minor label | `matchUpdateTypes: ["minor"]` | `type/minor` label |
 | Patch label | `matchUpdateTypes: ["patch"]` | `type/patch` label |
@@ -206,7 +206,7 @@ instead, so it moves together with the tool's hook, Action and mise pin.
 | `galaxy`, `galaxy-collection` | `renovate/ansible` | - |
 | `terraform-provider` | `renovate/terraform` | - |
 | `github-releases`, `github-tags` | `renovate/github-release` | - |
-| `github-actions` (manager) | `renovate/github-action` | scope: `actions`, for every update type — actions bumps are never marked breaking |
+| `github-actions` (manager) | `renovate/github-action` | scope: `actions`, for every update type, so an actions bump releases nothing |
 | `pypi` | `renovate/pip` | - |
 
 ### Dependency groups
@@ -286,9 +286,9 @@ Every tool group commits as **`chore(tooling):`**, for every update type and eve
 member. A grouped branch takes its prefix from the member that sorts first by
 `depName`. These groups mix `chore(deps)` (mise), `chore(tooling)` (pre-commit)
 and `chore(actions)` members, so without a group-wide prefix the title would follow
-the alphabet: cosign would come out as `chore(deps)!:` on a major and cut a major
-release for a signing-tool bump. Set on the group, the prefix reaches every member,
-never carries `!`, and releases nothing. This also means an Action in a tool group,
+the alphabet: cosign would come out as `chore(deps):` and cut a release for a
+signing-tool bump. Set on the group, the prefix reaches every member and releases
+nothing. This also means an Action in a tool group,
 such as `goreleaser/goreleaser-action`, commits as `tooling`, not `actions`. Tool
 groups carry no ` (dev)` suffix, because every member already shares one prefix.
 The suffix would only split an npm devDependency (`markdownlint-cli2`) from its own
@@ -403,14 +403,14 @@ This executes:
   *compiles*, never that it *matches* anything, so this is the only guard against a
   regex that silently stops extracting. Requires `node` on `PATH`
 - **`check-commit-messages`** -- runs `test/check-commit-messages.mjs`, which asserts
-  every `commitMessagePrefix` in `default.json` is a valid conventional-commit prefix,
-  that no rule for GitHub Actions, `nvm`, `pre-commit`, `devDependencies` or
-  `require-dev` carries a `!` breaking marker or a scope other than its own
-  (`actions`, `tooling`, `dev-deps`), that each of those overrides sits after every
-  unscoped breaking prefix, and that only a GitHub Actions rule uses the `actions`
-  scope. It also asserts that every group either carries the ` (dev)` suffix or
-  sets its own prefix. A [tool group](#tool-groups) prefix must carry no `!`, must
-  match its `semanticCommitScope`, and must sit after every other prefixed rule.
+  every `commitMessagePrefix` in `default.json` is a valid conventional-commit prefix
+  and that none carries a `!` breaking marker. It asserts that GitHub Actions,
+  `nvm`, `pre-commit`, `devDependencies`, `require-dev` and lock-file-only updates
+  each get their own scope (`actions`, `tooling`, `dev-deps`, `lockfile`) for every
+  update type, and that only a GitHub Actions rule uses the `actions` scope. It also
+  asserts that every group either carries the ` (dev)` suffix or sets its own
+  prefix. A [tool group](#tool-groups) prefix must match its `semanticCommitScope`
+  and must sit after every other prefixed rule.
   The validator
   types `commitMessagePrefix` as a plain string, so none of those defects fail it —
   they fail commitlint in consuming repos instead. Requires `node` on `PATH`
