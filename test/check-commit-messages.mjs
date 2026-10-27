@@ -50,13 +50,15 @@ const pass = (msg) => console.log(`ok   ${msg}`);
 // Updates that never reach a consuming package, so they must release nothing. Each
 // target names how a packageRule selects it and the one scope that rule must give
 // it: 'actions' is reserved for GitHub Actions, so a dev-dependency or .nvmrc bump
-// is never mislabelled as a workflow change.
+// is never mislabelled as a workflow change. A lock-file-only update is selected by
+// the JSONata expression itself, since no consumer installs the lock file.
 const NO_RELEASE = [
   { name: 'github-actions', field: 'matchManagers', scope: 'actions' },
   { name: 'nvm', field: 'matchManagers', scope: 'tooling' },
   { name: 'pre-commit', field: 'matchManagers', scope: 'tooling' },
   { name: 'devDependencies', field: 'matchDepTypes', scope: 'dev-deps' },
   { name: 'require-dev', field: 'matchDepTypes', scope: 'dev-deps' },
+  { name: 'isLockfileUpdate = true', field: 'matchJsonata', scope: 'lockfile' },
 ];
 
 const targetsOf = (rule) => NO_RELEASE.filter((t) => (rule[t.field] ?? []).includes(t.name));

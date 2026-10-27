@@ -267,6 +267,25 @@
     },
     {
       "description": [
+        "An update whose new version already satisfies the current range changes only the ",
+        "lock file, and Renovate marks it isLockfileUpdate. Every vulnerability alert lands ",
+        "this way when it can, because vulnerabilityAlerts defaults to rangeStrategy ",
+        "'update-lockfile'. A published package ships no lock file and its consumers ",
+        "resolve the range themselves, so as 'chore(deps)' each of these cut a patch ",
+        "release that changed nothing for them. semantic-release-config has no rule for ",
+        "'lockfile', so it releases nothing, and the scope matches the 'chore(lockfile)' ",
+        "prefix those repositories give Dependabot. matchJsonata is how Renovate's own ",
+        "semanticPrefixFixDepsChoreOthers preset selects these updates; matchUpdateTypes ",
+        "cannot, because updateType stays major, minor or patch. Sits after the dev-deps ",
+        "rule, so a lock-file-only dev dependency update reads 'lockfile' too."
+      ],
+      "matchJsonata": [
+        "isLockfileUpdate = true"
+      ],
+      "semanticCommitScope": "lockfile"
+    },
+    {
+      "description": [
         "Re-enable digest updates for ALL GitHub Actions. ",
         "helpers:pinGitHubActionDigests pins every action to a SHA, but the global ",
         "digest.enabled:false would otherwise freeze those pinned SHAs forever when ",

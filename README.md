@@ -190,7 +190,8 @@ instead, so it moves together with the tool's hook, Action and mise pin.
 |------|---------|--------|
 | Major label | `matchUpdateTypes: ["major"]` | `type/major` label only. No update is marked breaking: a dependency's major is not a major of the package that depends on it, so a runtime-dependency major commits as `fix(deps):` like any other runtime update and releases a patch. When a package cuts a major is its owner's call, made in a commit of their own |
 | Tooling releases nothing | `matchManagers: ["nvm", "pre-commit"]`, every update type | `tooling` scope. `.nvmrc` and pre-commit hooks change local tooling and CI only. The `actions` scope is reserved for GitHub Actions |
-| Dev dependencies release nothing | `matchDepTypes: ["devDependencies", "require-dev"]`, every update type | `dev-deps` scope. Dev dependencies never reach consumers. `@ivuorinen/semantic-release-config` has a release rule for `deps` only, so neither `dev-deps` nor `tooling` cuts a release |
+| Dev dependencies release nothing | `matchDepTypes: ["devDependencies", "require-dev"]`, every update type | `dev-deps` scope. Dev dependencies never reach consumers. `@ivuorinen/semantic-release-config` has a release rule for `deps` only, so neither `dev-deps`, `tooling` nor `lockfile` cuts a release |
+| Lock-file-only updates release nothing | `matchJsonata: ["isLockfileUpdate = true"]`, every update type | `lockfile` scope. An update whose new version already satisfies the range changes only the lock file, which no consumer installs. Every vulnerability alert lands this way when it can (`vulnerabilityAlerts` defaults to `rangeStrategy: "update-lockfile"`), so `chore(lockfile): update dependency undici (8.11.2 → 8.12.2) [SECURITY]` no longer cuts an empty patch. Renovate's own `semanticPrefixFixDepsChoreOthers` selects these updates with the same expression; `matchUpdateTypes` cannot, since `updateType` stays major, minor or patch. Sits after the dev-deps rule, so a lock-file-only dev dependency update reads `lockfile` too |
 | Automerge non-major | `matchUpdateTypes: ["minor", "patch"]` | Automerge via branch strategy. `digest` is deliberately excluded — see below |
 | Minor label | `matchUpdateTypes: ["minor"]` | `type/minor` label |
 | Patch label | `matchUpdateTypes: ["patch"]` | `type/patch` label |
@@ -404,9 +405,9 @@ This executes:
 - **`check-commit-messages`** -- runs `test/check-commit-messages.mjs`, which asserts
   every `commitMessagePrefix` in `default.json` is a valid conventional-commit prefix
   and that none carries a `!` breaking marker. It asserts that GitHub Actions,
-  `nvm`, `pre-commit`, `devDependencies` and `require-dev` each get their own scope
-  (`actions`, `tooling`, `dev-deps`) for every update type, and that only a GitHub
-  Actions rule uses the `actions` scope. It also
+  `nvm`, `pre-commit`, `devDependencies`, `require-dev` and lock-file-only updates
+  each get their own scope (`actions`, `tooling`, `dev-deps`, `lockfile`) for every
+  update type, and that only a GitHub Actions rule uses the `actions` scope. It also
   asserts that every group either carries the ` (dev)` suffix or sets its own
   prefix. A [tool group](#tool-groups) prefix must match its `semanticCommitScope`
   and must sit after every other prefixed rule.
