@@ -47,12 +47,11 @@ const fail = (msg) => {
 };
 const pass = (msg) => console.log(`ok   ${msg}`);
 
-// Updates that never touch a consuming package's public API, so a major bump of one
-// must never carry the "!" that makes semantic-release cut a major. Each target
-// names how a packageRule selects it and the one scope its override must use:
-// 'actions' is reserved for GitHub Actions, so a dev-dependency or .nvmrc bump is
-// never mislabelled as a workflow change.
-const NON_BREAKING = [
+// Updates that never reach a consuming package, so they must release nothing. Each
+// target names how a packageRule selects it and the one scope that rule must give
+// it: 'actions' is reserved for GitHub Actions, so a dev-dependency or .nvmrc bump
+// is never mislabelled as a workflow change.
+const NO_RELEASE = [
   { name: 'github-actions', field: 'matchManagers', scope: 'actions' },
   { name: 'nvm', field: 'matchManagers', scope: 'tooling' },
   { name: 'pre-commit', field: 'matchManagers', scope: 'tooling' },
@@ -60,8 +59,7 @@ const NON_BREAKING = [
   { name: 'require-dev', field: 'matchDepTypes', scope: 'dev-deps' },
 ];
 
-const targetsOf = (rule) => NON_BREAKING.filter((t) => (rule[t.field] ?? []).includes(t.name));
-const matchesNonBreaking = (rule) => targetsOf(rule).length > 0;
+const targetsOf = (rule) => NO_RELEASE.filter((t) => (rule[t.field] ?? []).includes(t.name));
 const prefixed = rules
   .map((rule, index) => ({ rule, index }))
   .filter(({ rule }) => typeof rule.commitMessagePrefix === 'string');
@@ -79,34 +77,23 @@ for (const { rule, index } of prefixed) {
   }
 }
 
-// 2. No rule selecting a non-breaking target marks its updates breaking, and its
-//    prefix uses that target's scope. See CLAUDE.md.
-for (const { rule, index } of prefixed.filter(({ rule }) => matchesNonBreaking(rule))) {
-  const names = targetsOf(rule).map((t) => t.name).join(', ');
+// 2. No prefix marks an update breaking. A dependency's major is not a major of the
+//    package that depends on it, and a "!" lets semantic-release cut a major nobody
+//    chose; when a package cuts a major is its owner's call.
+for (const { rule, index } of prefixed) {
   if (rule.commitMessagePrefix.includes('!')) {
-    fail(
-      `packageRules[${index}] marks ${names} updates breaking with ` +
-        `${JSON.stringify(rule.commitMessagePrefix)} — these bumps are never breaking`,
-    );
+    fail(`packageRules[${index}] prefix ${JSON.stringify(rule.commitMessagePrefix)} marks updates breaking`);
   } else {
-    pass(`packageRules[${index}] ${names} prefix carries no breaking marker`);
-  }
-  for (const target of targetsOf(rule)) {
-    if (!rule.commitMessagePrefix.startsWith(`chore(${target.scope}): `)) {
-      fail(
-        `packageRules[${index}] gives ${target.name} ${JSON.stringify(rule.commitMessagePrefix)}; ` +
-          `expected "chore(${target.scope}): "`,
-      );
-    }
+    pass(`packageRules[${index}] prefix carries no breaking marker`);
   }
 }
 
-// 2b. Semantic scopes on target rules, prefixed or not. Renovate builds the prefix
-//     from semanticCommitType + semanticCommitScope whenever no literal prefix
-//     applies, so a rule like the github-actions label rule — scope only, no
-//     prefix — decides every non-major commit. A 'deps' scope there would slip past
-//     the prefix checks above and make those updates release again.
-for (const target of NON_BREAKING) {
+// 3. Every no-release target gets its own scope for every update type. Renovate
+//    builds the prefix from semanticCommitType + semanticCommitScope whenever no
+//    literal prefix applies, so a scope-only rule such as the github-actions label
+//    rule decides every commit for its target. A 'deps' scope or prefix on one of
+//    these rules would make its updates release again.
+for (const target of NO_RELEASE) {
   const selecting = rules
     .map((rule, index) => ({ rule, index }))
     .filter(({ rule }) => targetsOf(rule).includes(target));
@@ -115,6 +102,15 @@ for (const target of NON_BREAKING) {
       fail(
         `packageRules[${index}] gives ${target.name} semanticCommitScope ` +
           `${JSON.stringify(rule.semanticCommitScope)}; expected "${target.scope}"`,
+      );
+    }
+    if (
+      typeof rule.commitMessagePrefix === 'string' &&
+      !rule.commitMessagePrefix.startsWith(`chore(${target.scope}): `)
+    ) {
+      fail(
+        `packageRules[${index}] gives ${target.name} ${JSON.stringify(rule.commitMessagePrefix)}; ` +
+          `expected "chore(${target.scope}): "`,
       );
     }
   }
@@ -129,43 +125,8 @@ for (const target of NON_BREAKING) {
   } else {
     fail(
       `no rule gives ${target.name} the "${target.scope}" scope for every update type — ` +
-        'its non-major updates fall back to "deps" and release',
+        'its updates fall back to "deps" and release',
     );
-  }
-}
-
-// 3. Coverage and ordering. Renovate applies packageRules in array order and later
-//    matches win, so each target's non-breaking prefix only survives if it sits
-//    after every unscoped breaking prefix. Without this check, moving a rule up —
-//    or dropping one — silently restores "chore(deps)!:" on that target's majors.
-const breakingBefore = prefixed.filter(
-  ({ rule }) =>
-    rule.commitMessagePrefix.includes('!') && !rule.matchManagers && !rule.matchDepTypes,
-);
-
-for (const target of NON_BREAKING) {
-  const overrides = prefixed.filter(({ rule }) => targetsOf(rule).includes(target));
-  if (breakingBefore.length && !overrides.length) {
-    fail(
-      `a breaking commitMessagePrefix applies to every update and no ${target.name} rule ` +
-        `overrides it — ${target.name} majors would ship as breaking changes`,
-    );
-  }
-  for (const override of overrides) {
-    for (const breaking of breakingBefore) {
-      if (breaking.index > override.index) {
-        fail(
-          `packageRules[${breaking.index}] (${JSON.stringify(breaking.rule.commitMessagePrefix)}) ` +
-            `comes after the ${target.name} override at packageRules[${override.index}] and ` +
-            'overwrites it — later matching rules win',
-        );
-      } else {
-        pass(
-          `packageRules[${override.index}] ${target.name} override still wins over ` +
-            `packageRules[${breaking.index}]`,
-        );
-      }
-    }
   }
 }
 
@@ -214,10 +175,10 @@ rules.forEach((rule, index) => {
 });
 
 // 6. A group that sets its own prefix only stops the first-member leak in check 5
-//    if the prefix survives to every member: it must carry no "!", agree with its
-//    semanticCommitScope, and sit after every other prefixed rule. Placed earlier,
-//    the actions major rule or the dev-deps rule would overwrite it for their
-//    members, and the group title would follow the alphabet again.
+//    if the prefix survives to every member: it must agree with its
+//    semanticCommitScope and sit after every other prefixed rule. A prefixed rule
+//    placed after it would overwrite it for the members both match, and the group
+//    title would follow the alphabet again. Check 2 already rejects a "!".
 const lastOtherPrefix = Math.max(
   -1,
   ...prefixed.filter(({ rule }) => !isPrefixedGroup(rule)).map(({ index }) => index),
@@ -225,9 +186,7 @@ const lastOtherPrefix = Math.max(
 rules.forEach((rule, index) => {
   if (!isPrefixedGroup(rule)) return;
   const name = JSON.stringify(rule.groupName);
-  if (rule.commitMessagePrefix.includes('!')) {
-    fail(`packageRules[${index}] group ${name} prefix ${JSON.stringify(rule.commitMessagePrefix)} is breaking`);
-  } else if (rule.commitMessagePrefix !== `chore(${rule.semanticCommitScope}): `) {
+  if (rule.commitMessagePrefix !== `chore(${rule.semanticCommitScope}): `) {
     fail(
       `packageRules[${index}] group ${name} prefix ${JSON.stringify(rule.commitMessagePrefix)} ` +
         `disagrees with semanticCommitScope ${JSON.stringify(rule.semanticCommitScope)}`,

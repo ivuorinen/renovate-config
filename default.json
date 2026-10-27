@@ -88,7 +88,14 @@
       "addLabels": [
         "type/major"
       ],
-      "commitMessagePrefix": "chore(deps)!: ",
+      "description": [
+        "Label majors, nothing more. No update is marked breaking: a dependency's major is ",
+        "not a major of the package that depends on it. The 'chore(deps)!: ' prefix this ",
+        "rule used to set cut majors nobody chose: base-configs went from v1 to v4 between ",
+        "2026-07-28 and 2026-08-17 on three dependency majors alone. A package's major is ",
+        "its owner's call, made in a commit of their own. test/check-commit-messages.mjs ",
+        "fails on any prefix that carries '!'."
+      ],
       "matchUpdateTypes": [
         "major"
       ]
@@ -211,19 +218,15 @@
       "semanticCommitScope": "actions"
     },
     {
-      "commitMessagePrefix": "chore(tooling): ",
       "description": [
         ".nvmrc (nvm manager) and pre-commit hook updates change local tooling and CI, ",
         "never a package's public API, so they get their own 'tooling' scope — 'actions' ",
         "is reserved for GitHub Actions. The default 'deps' scope made semantic-release ",
         "in the consuming repo cut a patch for every Node bump ",
         "(ivuorinen/base-configs#577 and ivuorinen/base-configs-commitlint#196 were ",
-        "retitled by hand), and the global major rule's 'chore(deps)!: ' cut a major. ",
-        "semantic-release-config has a release rule for 'deps' only, so ",
-        "'chore(tooling): ' releases nothing — as long as it carries no '!'. The prefix ",
-        "is literal for the same reason as the actions major rule below: a packageRule ",
-        "can only override the major rule's prefix, not unset it. A repo whose .nvmrc ",
-        "does ship to users (e.g. a Docker image built from it) overrides this locally."
+        "retitled by hand). semantic-release-config has a release rule for 'deps' only, ",
+        "so 'chore(tooling): ' releases nothing. A repo whose .nvmrc does ship to users ",
+        "(e.g. a Docker image built from it) overrides this locally."
       ],
       "matchManagers": [
         "nvm",
@@ -250,16 +253,11 @@
       ]
     },
     {
-      "commitMessagePrefix": "chore(dev-deps): ",
       "description": [
         "devDependencies (npm) and require-dev (Composer) never reach a package's ",
-        "consumers, so no update to one — major included — is a breaking change. The ",
-        "global major rule's 'chore(deps)!: ' made semantic-release in the consuming repo ",
-        "cut a major for a test-runner bump. semantic-release-config has a release rule ",
-        "for 'deps' only, so 'chore(dev-deps): ' releases nothing. The prefix is literal ",
-        "because a packageRule can only override the major rule's prefix, not unset it; ",
-        "semanticCommitScope is set to match so the two never disagree. Must stay after ",
-        "the major rule: later matching rules win."
+        "consumers, so every update to one, major included, gets the 'dev-deps' scope. ",
+        "semantic-release-config has a release rule for 'deps' only, so ",
+        "'chore(dev-deps): ' releases nothing."
       ],
       "matchDepTypes": [
         "devDependencies",
@@ -284,25 +282,6 @@
       ],
       "matchUpdateTypes": [
         "digest"
-      ]
-    },
-    {
-      "commitMessagePrefix": "chore(actions): ",
-      "description": [
-        "Never mark a GitHub Actions major bump as a breaking change. The global major ",
-        "rule sets 'chore(deps)!: ', and the '!' makes semantic-release in the consuming ",
-        "repo cut a major release — but an actions/checkout v4 → v5 bump changes CI only, ",
-        "never the package's public API. This restates the prefix literally rather than ",
-        "resetting it, because a packageRule can only override a value, not unset one; ",
-        "the literal must stay in sync with semanticCommitType + the 'actions' ",
-        "semanticCommitScope set above. Must stay after the major rule: later matching ",
-        "rules win."
-      ],
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchUpdateTypes": [
-        "major"
       ]
     },
     {
@@ -400,8 +379,8 @@
         "'chore(tooling): ' is required, not cosmetic: a grouped branch takes its prefix ",
         "from the first upgrade sorted by depName, and these groups mix chore(deps), ",
         "chore(tooling) and chore(actions) members, so the title would follow the alphabet ",
-        "and a mise major would ship as 'chore(deps)!: '. Set on the group, every member ",
-        "carries it: never breaking, never a release. That also removes the reason for the ",
+        "and a mise pin would ship as 'chore(deps): ', which releases. Set on the group, ",
+        "every member carries it: never a release. That also removes the reason for the ",
         "' (dev)' suffix, which would split an npm devDependency from its own hook. ",
         "group.commitMessageTopic keeps a version in the title: Renovate drops ",
         "commitMessageExtra when members' new versions are spelled differently (an Action ",
